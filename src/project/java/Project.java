@@ -8,13 +8,12 @@
  *          https://opensource.org/licenses/MIT
  */
 public class Project extends bee.api.Project {
-    String fx = "14-ea+2";
     {
         product("com.github.teletha", "altfx", "1.0");
 
-        require("org.openjfx", "javafx-controls", fx);
-        require("org.openjfx", "javafx-media", fx);
-        require("org.openjfx", "javafx-web", fx);
+        require("org.openjfx", "javafx-controls");
+        require("org.openjfx", "javafx-media");
+        require("org.openjfx", "javafx-web");
 
         versionControlSystem("https://github.com/teletha/viewtify-cutomfx");
     }
