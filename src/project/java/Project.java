@@ -9,7 +9,7 @@
  */
 public class Project extends bee.api.Project {
     {
-        product("com.github.teletha", "altfx", "1.0");
+        product("com.github.teletha", "altfx", "1.1");
 
         require("org.openjfx", "javafx-controls");
         require("org.openjfx", "javafx-media");

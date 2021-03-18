@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,50 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.sun.glass.ui.Accessible;
+import com.sun.glass.ui.Application;
+import com.sun.javafx.beans.IDProperty;
+import com.sun.javafx.beans.event.AbstractNotifyListener;
+import com.sun.javafx.binding.ExpressionHelper;
+import com.sun.javafx.collections.TrackableObservableList;
+import com.sun.javafx.collections.UnmodifiableListSet;
+import com.sun.javafx.css.PseudoClassState;
+import com.sun.javafx.effect.EffectDirtyBits;
+import com.sun.javafx.geom.BaseBounds;
+import com.sun.javafx.geom.BoxBounds;
+import com.sun.javafx.geom.PickRay;
+import com.sun.javafx.geom.RectBounds;
+import com.sun.javafx.geom.Vec3d;
+import com.sun.javafx.geom.transform.Affine3D;
+import com.sun.javafx.geom.transform.BaseTransform;
+import com.sun.javafx.geom.transform.GeneralTransform3D;
+import com.sun.javafx.geom.transform.NoninvertibleTransformException;
+import com.sun.javafx.geometry.BoundsUtils;
+import com.sun.javafx.logging.PlatformLogger;
+import com.sun.javafx.logging.PlatformLogger.Level;
+import com.sun.javafx.perf.PerformanceTracker;
+import com.sun.javafx.scene.BoundsAccessor;
+import com.sun.javafx.scene.CameraHelper;
+import com.sun.javafx.scene.CssFlags;
+import com.sun.javafx.scene.DirtyBits;
+import com.sun.javafx.scene.EventHandlerProperties;
+import com.sun.javafx.scene.LayoutFlags;
+import com.sun.javafx.scene.NodeEventDispatcher;
+import com.sun.javafx.scene.NodeHelper;
+import com.sun.javafx.scene.SceneHelper;
+import com.sun.javafx.scene.SceneUtils;
+import com.sun.javafx.scene.input.PickResultChooser;
+import com.sun.javafx.scene.transform.TransformHelper;
+import com.sun.javafx.scene.transform.TransformUtils;
+import com.sun.javafx.scene.traversal.Direction;
+import com.sun.javafx.sg.prism.NGNode;
+import com.sun.javafx.tk.Toolkit;
+import com.sun.javafx.util.Logging;
+import com.sun.javafx.util.TempState;
+import com.sun.javafx.util.Utils;
+import com.sun.prism.impl.PrismSettings;
+import com.sun.scenario.effect.EffectHelper;
 
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -117,50 +161,6 @@ import javafx.scene.transform.Transform;
 import javafx.stage.Window;
 import javafx.util.Callback;
 
-import com.sun.glass.ui.Accessible;
-import com.sun.glass.ui.Application;
-import com.sun.javafx.beans.IDProperty;
-import com.sun.javafx.beans.event.AbstractNotifyListener;
-import com.sun.javafx.binding.ExpressionHelper;
-import com.sun.javafx.collections.TrackableObservableList;
-import com.sun.javafx.collections.UnmodifiableListSet;
-import com.sun.javafx.css.PseudoClassState;
-import com.sun.javafx.effect.EffectDirtyBits;
-import com.sun.javafx.geom.BaseBounds;
-import com.sun.javafx.geom.BoxBounds;
-import com.sun.javafx.geom.PickRay;
-import com.sun.javafx.geom.RectBounds;
-import com.sun.javafx.geom.Vec3d;
-import com.sun.javafx.geom.transform.Affine3D;
-import com.sun.javafx.geom.transform.BaseTransform;
-import com.sun.javafx.geom.transform.GeneralTransform3D;
-import com.sun.javafx.geom.transform.NoninvertibleTransformException;
-import com.sun.javafx.geometry.BoundsUtils;
-import com.sun.javafx.logging.PlatformLogger;
-import com.sun.javafx.logging.PlatformLogger.Level;
-import com.sun.javafx.perf.PerformanceTracker;
-import com.sun.javafx.scene.BoundsAccessor;
-import com.sun.javafx.scene.CameraHelper;
-import com.sun.javafx.scene.CssFlags;
-import com.sun.javafx.scene.DirtyBits;
-import com.sun.javafx.scene.EventHandlerProperties;
-import com.sun.javafx.scene.LayoutFlags;
-import com.sun.javafx.scene.NodeEventDispatcher;
-import com.sun.javafx.scene.NodeHelper;
-import com.sun.javafx.scene.SceneHelper;
-import com.sun.javafx.scene.SceneUtils;
-import com.sun.javafx.scene.input.PickResultChooser;
-import com.sun.javafx.scene.transform.TransformHelper;
-import com.sun.javafx.scene.transform.TransformUtils;
-import com.sun.javafx.scene.traversal.Direction;
-import com.sun.javafx.sg.prism.NGNode;
-import com.sun.javafx.tk.Toolkit;
-import com.sun.javafx.util.Logging;
-import com.sun.javafx.util.TempState;
-import com.sun.javafx.util.Utils;
-import com.sun.prism.impl.PrismSettings;
-import com.sun.scenario.effect.EffectHelper;
-
 /**
  * Base class for scene graph nodes. A scene graph is a set of tree data structures where every item
  * has zero or one parent, and each item is either a "leaf" with zero sub-items or a "branch" with
@@ -210,7 +210,7 @@ import com.sun.scenario.effect.EffectHelper;
  * An application should not extend the Node class directly. Doing so may lead to an
  * UnsupportedOperationException being thrown.
  * </p>
- * <h3>String ID</h3>
+ * <h2><a id="StringID">String ID</a></h2>
  * <p>
  * Each node in the scene graph can be given a unique {@link #idProperty id}. This id is much like
  * the "id" attribute of an HTML tag in that it is up to the designer and developer to ensure that
@@ -218,7 +218,7 @@ import com.sun.scenario.effect.EffectHelper;
  * {@link #lookup(String)} can be used to find a node with a unique id within the scene graph, or
  * within a subtree of the scene graph. The id can also be used identify nodes for applying styles;
  * see the CSS section below.
- * <h3>Coordinate System</h3>
+ * <h2><a id="CoordinateSystem">Coordinate System</a></h2>
  * <p>
  * The {@code Node} class defines a traditional computer graphics "local" coordinate system in which
  * the {@code x} axis increases to the right and the {@code y} axis increases downwards. The
@@ -242,7 +242,7 @@ import com.sun.scenario.effect.EffectHelper;
  * pixel grid is relative to the transformed coordinates, not the local coordinates of the nodes.
  * The {@link javafx.scene.shape.Shape Shape} class describes some additional important
  * context-specific information about coordinate mapping and how it can affect rendering.
- * <h3>Transformations</h3>
+ * <h2><a id="Transformations">Transformations</a></h2>
  * <p>
  * Any {@code Node} can have transformations applied to it. These include translation, rotation,
  * scaling, or shearing.
@@ -276,7 +276,7 @@ import com.sun.scenario.effect.EffectHelper;
  * scaling factor. Scaling alters the coordinate space of the node such that each unit of distance
  * along the axis in local coordinates is multiplied by the scale factor. As with rotation
  * transformations, scaling transformations are applied about a "pivot" point. You can think of this
- * as the point in the Node around which you "zoom". For example, if you create a
+ * as the point in the {@code Node} around which you "zoom". For example, if you create a
  * {@link javafx.scene.shape.Rectangle} with a {@code strokeWidth} of 5, and a width and height of
  * 50, and you apply a {@link javafx.scene.transform.Scale} with scale factors (x=2.0, y=2.0) and a
  * pivot at the origin (pivotX=0, pivotY=0), the entire rectangle (including the stroke) will double
@@ -285,10 +285,24 @@ import com.sun.scenario.effect.EffectHelper;
  * A <b>shearing</b> transformation, sometimes called a skew, effectively rotates one axis so that
  * the x and y axes are no longer perpendicular.
  * <p>
- * Multiple transformations may be applied to a node by specifying an ordered chain of transforms.
- * The order in which the transforms are applied is defined by the ObservableList specified in the
- * {@link #getTransforms transforms} variable.
- * <h3>Bounding Rectangles</h3>
+ * Multiple transformations may be applied to a node. Custom transforms are applied using the
+ * {@link #getTransforms transforms} list. Predefined transforms are applied using the properties
+ * specified below. The matrices that represent the transforms are multiplied in this order:
+ * <ol>
+ * <li>Layout ({@link #layoutXProperty layoutX}, {@link #layoutYProperty layoutY}) and translate
+ * ({@link #translateXProperty translateX}, {@link #translateYProperty translateY},
+ * {@link #translateZProperty translateZ})</li>
+ * <li>Rotate ({@link #rotateProperty rotate})</li>
+ * <li>Scale ({@link #scaleXProperty scaleX}, {@link #scaleYProperty scaleY}, {@link #scaleZProperty
+ * scaleZ})</li>
+ * <li>Transforms list ({@link #getTransforms transforms}) starting from element 0</li>
+ * </ol>
+ * The transforms are applied in the reverse order of the matrix multiplication outlined above: last
+ * element of the transforms list to 0th element, scale, rotate, and layout and translate. By
+ * applying the transforms in this order, the bounds in the local coordinates of the node are
+ * transformed to the bounds in the parent coordinate of the node (see the
+ * <a href="#BoundingRectangles">Bounding Rectangles</a> section).
+ * <h2><a id="BoundingRectangles">Bounding Rectangles</a></h2>
  * <p>
  * Since every {@code Node} has transformations, every Node's geometric bounding rectangle can be
  * described differently depending on whether transformations are accounted for or not.
@@ -301,12 +315,9 @@ import com.sun.scenario.effect.EffectHelper;
  * <p>
  * Each {@code Node} also has a read-only {@link #boundsInParentProperty boundsInParent} variable
  * which specifies the bounding rectangle of the {@code Node} after all transformations have been
- * applied, including those set in {@link #getTransforms transforms}, {@link #scaleXProperty
- * scaleX}/{@link #scaleYProperty scaleY}, {@link #rotateProperty rotate},
- * {@link #translateXProperty translateX}/{@link #translateYProperty translateY}, and
- * {@link #layoutXProperty layoutX}/{@link #layoutYProperty layoutY}. It is called "boundsInParent"
- * because the rectangle will be relative to the parent's coordinate system. This is the 'visual'
- * bounds of the node.
+ * applied as specified in the <a href="#Transformations">Transformations</a> section. It is called
+ * "boundsInParent" because the rectangle will be relative to the parent's coordinate system. This
+ * is the 'visual' bounds of the node.
  * <p>
  * Finally, the {@link #layoutBoundsProperty layoutBounds} variable defines the rectangular bounds
  * of the {@code Node} that should be used as the basis for layout calculations and may differ from
@@ -341,7 +352,7 @@ import com.sun.scenario.effect.EffectHelper;
  * <p>
  * <img src="doc-files/bounds.png" alt="The rectangles are enclosed by their respective bounds">
  * </p>
- * <h3>CSS</h3>
+ * <h2><a id="CSS">CSS</a></h2>
  * <p>
  * The {@code Node} class contains {@code id}, {@code styleClass}, and {@code style} variables that
  * are used in styling this node from CSS. The {@code id} and {@code styleClass} variables are used
@@ -350,7 +361,7 @@ import com.sun.scenario.effect.EffectHelper;
  * <p>
  * For further information about CSS and how to apply CSS styles to nodes, see the
  * <a href="doc-files/cssref.html">CSS Reference Guide</a>.
- * 
+ *
  * @since JavaFX 2.0
  */
 @IDProperty("id")
@@ -534,6 +545,11 @@ public abstract class Node implements EventTarget, Styleable {
             }
 
             @Override
+            public void recalculateRelativeSizeProperties(Node node, Font fontForRelativeSizes) {
+                node.recalculateRelativeSizeProperties(fontForRelativeSizes);
+            }
+
+            @Override
             public boolean isTreeVisible(Node node) {
                 return node.isTreeVisible();
             }
@@ -546,11 +562,6 @@ public abstract class Node implements EventTarget, Styleable {
             @Override
             public boolean isTreeShowing(Node node) {
                 return node.isTreeShowing();
-            }
-
-            @Override
-            public BooleanExpression treeShowingProperty(Node node) {
-                return node.treeShowingProperty();
             }
 
             @Override
@@ -801,6 +812,11 @@ public abstract class Node implements EventTarget, Styleable {
      *
      * @return an observable map of properties on this node for use primarily by application
      *         developers
+     * @apiNote Layout managers use this map as well to specify layout constraints on the node, such
+     *          as {@code HBox#setHgrow}, so the developer should be mindful of clearing the map or
+     *          overriding its values. These entries are not removed automatically if the node is
+     *          removed from the layout manager, so unused entries can exist throughout the life of
+     *          the node.
      */
     public final ObservableMap<Object, Object> getProperties() {
         if (properties == null) {
@@ -930,19 +946,6 @@ public abstract class Node implements EventTarget, Styleable {
 
     private final InvalidationListener parentTreeVisibleChangedListener = valueModel -> updateTreeVisible(true);
 
-    private final ChangeListener<Boolean> windowShowingChangedListener = (win, oldVal, newVal) -> updateTreeShowing();
-
-    private final ChangeListener<Window> sceneWindowChangedListener = (scene, oldWindow, newWindow) -> {
-        // Replace the windowShowingListener and call updateTreeShowing()
-        if (oldWindow != null) {
-            oldWindow.showingProperty().removeListener(windowShowingChangedListener);
-        }
-        if (newWindow != null) {
-            newWindow.showingProperty().addListener(windowShowingChangedListener);
-        }
-        updateTreeShowing();
-    };
-
     private SubScene subScene = null;
 
     /**
@@ -999,26 +1002,6 @@ public abstract class Node implements EventTarget, Styleable {
             focusSetDirty(newScene);
         }
         scenesChanged(newScene, newSubScene, oldScene, oldSubScene);
-
-        // isTreeShowing needs to take into account of Window's showing
-        if (oldScene != null) {
-            oldScene.windowProperty().removeListener(sceneWindowChangedListener);
-
-            Window window = oldScene.windowProperty().get();
-            if (window != null) {
-                window.showingProperty().removeListener(windowShowingChangedListener);
-            }
-        }
-        if (newScene != null) {
-            newScene.windowProperty().addListener(sceneWindowChangedListener);
-
-            Window window = newScene.windowProperty().get();
-            if (window != null) {
-                window.showingProperty().addListener(windowShowingChangedListener);
-            }
-
-        }
-        updateTreeShowing();
 
         if (sceneChanged) reapplyCSS();
 
@@ -1492,7 +1475,7 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Specifies a {@code Node} to use to define the the clipping shape for this Node. This clipping
+     * Specifies a {@code Node} to use to define the clipping shape for this Node. This clipping
      * Node is not a child of this {@code Node} in the scene graph sense. Rather, it is used to
      * define the clip for this {@code Node}.
      * <p>
@@ -3134,22 +3117,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The rectangular bounds of this {@code Node} which include its transforms.
-     * {@code boundsInParent} is calculated by taking the local bounds (defined by
-     * {@link #boundsInLocalProperty boundsInLocal}) and applying the transform created by setting
-     * the following additional variables
-     * <ol>
-     * <li>{@link #getTransforms transforms} ObservableList</li>
-     * <li>{@link #scaleXProperty scaleX}, {@link #scaleYProperty scaleY}, {@link #scaleZProperty
-     * scaleZ}</li>
-     * <li>{@link #rotateProperty rotate}</li>
-     * <li>{@link #layoutXProperty layoutX}, {@link #layoutYProperty layoutY}</li>
-     * <li>{@link #translateXProperty translateX}, {@link #translateYProperty translateY},
-     * {@link #translateZProperty translateZ}</li>
-     * </ol>
+     * The rectangular bounds of this {@code Node} in the parent coordinate system.
+     * {@code boundsInParent} is calculated by taking the {@linkplain #boundsInLocalProperty local
+     * bounds} and applying the node transforms as specified in the
+     * <a href="#Transformations">Transformations</a> section of the class doc.
      * <p>
      * The resulting bounds will be conceptually in the coordinate space of the {@code Node}'s
-     * parent, however the node need not have a parent to calculate these bounds.
+     * parent, however, the node need not have a parent to calculate these bounds.
      * <p>
      * Note that this method does not take the node's visibility into account; the computation is
      * based on the geometry of this {@code Node} only.
@@ -3162,8 +3136,10 @@ public abstract class Node implements EventTarget, Styleable {
      * error to bind any of these values in a node to an expression that depends upon this variable.
      * For example, the x or y variables of a shape, or {@code translateX}, {@code translateY}
      * should never be bound to {@code boundsInParent} for the purpose of positioning the node.
-     * 
-     * @return the boundsInParent for this {@code Node}
+     * <p>
+     * See also the <a href="#BoundingRectangles">Bounding Rectangles</a> section.
+     *
+     * @return the {@code boundsInParent} property for this {@code Node}
      */
     public final ReadOnlyObjectProperty<Bounds> boundsInParentProperty() {
         return getMiscProperties().boundsInParentProperty();
@@ -5071,11 +5047,10 @@ public abstract class Node implements EventTarget, Styleable {
      * * Transformations * *
      **************************************************************************/
     /**
-     * Defines the ObservableList of {@link javafx.scene.transform.Transform} objects to be applied
-     * to this {@code Node}. This ObservableList of transforms is applied before
-     * {@link #translateXProperty translateX}, {@link #translateYProperty translateY},
-     * {@link #scaleXProperty scaleX}, and {@link #scaleYProperty scaleY}, {@link #rotateProperty
-     * rotate} transforms.
+     * The {@code ObservableList} of custom {@link javafx.scene.transform.Transform}s to be applied
+     * to this {@code Node}. These transforms are applied before the predefined transforms.
+     * <p>
+     * See also the <a href="#Transformations">Transformations</a> section.
      *
      * @return the transforms for this {@code Node}
      * @defaultValue empty
@@ -7792,71 +7767,8 @@ public abstract class Node implements EventTarget, Styleable {
         return w != null && w.isShowing();
     }
 
-    private void updateTreeShowing() {
-        setTreeShowing(isTreeVisible() && isWindowShowing());
-    }
-
-    private boolean treeShowing;
-
-    private TreeShowingPropertyReadOnly treeShowingRO;
-
-    final void setTreeShowing(boolean value) {
-        if (treeShowing != value) {
-            treeShowing = value;
-            ((TreeShowingPropertyReadOnly) treeShowingProperty()).invalidate();
-        }
-    }
-
     final boolean isTreeShowing() {
-        return treeShowingProperty().get();
-    }
-
-    final BooleanExpression treeShowingProperty() {
-        if (treeShowingRO == null) {
-            treeShowingRO = new TreeShowingPropertyReadOnly();
-        }
-        return treeShowingRO;
-    }
-
-    class TreeShowingPropertyReadOnly extends BooleanExpression {
-
-        private ExpressionHelper<Boolean> helper;
-
-        private boolean valid;
-
-        @Override
-        public void addListener(InvalidationListener listener) {
-            helper = ExpressionHelper.addListener(helper, this, listener);
-        }
-
-        @Override
-        public void removeListener(InvalidationListener listener) {
-            helper = ExpressionHelper.removeListener(helper, listener);
-        }
-
-        @Override
-        public void addListener(ChangeListener<? super Boolean> listener) {
-            helper = ExpressionHelper.addListener(helper, this, listener);
-        }
-
-        @Override
-        public void removeListener(ChangeListener<? super Boolean> listener) {
-            helper = ExpressionHelper.removeListener(helper, listener);
-        }
-
-        protected void invalidate() {
-            if (valid) {
-                valid = false;
-                ExpressionHelper.fireValueChangedEvent(helper);
-            }
-        }
-
-        @Override
-        public boolean get() {
-            valid = true;
-            return Node.this.treeShowing;
-        }
-
+        return isTreeVisible() && isWindowShowing();
     }
 
     private void updateTreeVisible(boolean parentChanged) {
@@ -7874,8 +7786,6 @@ public abstract class Node implements EventTarget, Styleable {
             addToSceneDirtyList();
         }
         setTreeVisible(isTreeVisible);
-
-        updateTreeShowing();
     }
 
     private boolean treeVisible;
@@ -8519,6 +8429,7 @@ public abstract class Node implements EventTarget, Styleable {
         public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
+
             final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<CssMetaData<? extends Styleable, ?>>();
             styleables.add(CURSOR);
             styleables.add(EFFECT);
@@ -8688,15 +8599,15 @@ public abstract class Node implements EventTarget, Styleable {
     // package so that StyleHelper can get at it
     final ObservableSet<PseudoClass> pseudoClassStates = new PseudoClassState();
 
+    private final ObservableSet<PseudoClass> unmodifiablePseudoClassStates = FXCollections.unmodifiableObservableSet(pseudoClassStates);
+
     /**
      * @return The active pseudo-class states of this Node, wrapped in an unmodifiable ObservableSet
      * @since JavaFX 8.0
      */
     @Override
     public final ObservableSet<PseudoClass> getPseudoClassStates() {
-
-        return FXCollections.unmodifiableObservableSet(pseudoClassStates);
-
+        return unmodifiablePseudoClassStates;
     }
 
     // Walks up the tree telling each parent that the pseudo class state of
@@ -8730,11 +8641,24 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
+    final void recalculateRelativeSizeProperties(Font fontForRelativeSizes) {
+        if (styleHelper != null) {
+            styleHelper.recalculateRelativeSizeProperties(this, fontForRelativeSizes);
+        }
+    }
+
     final void reapplyCSS() {
 
         if (getScene() == null) return;
 
         if (cssFlag == CssFlags.REAPPLY) return;
+
+        if (cssFlag == CssFlags.DIRTY_BRANCH) {
+            // JDK-8193445 - don't reapply CSS from here
+            // Defer CSS application to this Node by marking cssFlag as REAPPLY
+            cssFlag = CssFlags.REAPPLY;
+            return;
+        }
 
         // RT-36838 - don't reapply CSS in the middle of an update
         if (cssFlag == CssFlags.UPDATE) {
