@@ -1111,7 +1111,6 @@ public abstract class Node implements EventTarget, Styleable {
      * </p>
      *
      * @defaultValue null
-     * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>.
      */
     private StringProperty id;
 
@@ -1170,7 +1169,6 @@ public abstract class Node implements EventTarget, Styleable {
      * and, as such, each element of the list is a style class to which this Node belongs.
      *
      * @see <a href="http://www.w3.org/TR/css3-selectors/#class-html">CSS3 class selectors</a>
-     * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>.
      * @defaultValue null
      */
     private ObservableList<String> styleClass = new TrackableObservableList<String>() {
@@ -1210,7 +1208,6 @@ public abstract class Node implements EventTarget, Styleable {
      * a style rule.
      * 
      * @defaultValue empty string
-     * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>.
      */
     private StringProperty style;
 
