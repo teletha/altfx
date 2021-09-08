@@ -8436,7 +8436,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+        public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
 
