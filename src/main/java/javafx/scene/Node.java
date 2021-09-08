@@ -576,11 +576,12 @@ public abstract class Node implements EventTarget, Styleable {
         });
     }
 
-    /**************************************************************************
-     * * Methods and state for managing the dirty bits of a Node. The dirty * bits are flags used to
-     * keep track of what things are dirty on the * node and therefore need processing on the next
-     * pulse. Since the pulse * happens asynchronously to the change that made the node dirty (for *
-     * performance reasons), we need to keep track of what things have * changed. * *
+    /*
+     * ************************************************************************ * Methods and state
+     * for managing the dirty bits of a Node. The dirty * bits are flags used to keep track of what
+     * things are dirty on the * node and therefore need processing on the next pulse. Since the
+     * pulse * happens asynchronously to the change that made the node dirty (for * performance
+     * reasons), we need to keep track of what things have * changed. * *
      *************************************************************************/
 
     /**
@@ -641,10 +642,11 @@ public abstract class Node implements EventTarget, Styleable {
         return dirtyBits.isEmpty();
     }
 
-    /**************************************************************************
-     * * Methods for synchronizing state from this Node to its PG peer. This * should only *ever* be
-     * called during synchronization initialized as a * result of a pulse. Any attempt to
-     * synchronize at any other time may * cause rendering artifacts. * *
+    /*
+     * ************************************************************************ * Methods for
+     * synchronizing state from this Node to its PG peer. This * should only *ever* be called during
+     * synchronization initialized as a * result of a pulse. Any attempt to synchronize at any other
+     * time may * cause rendering artifacts. * *
      *************************************************************************/
 
     /**
@@ -797,8 +799,8 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /*************************************************************************
-     * * * *
+    /*
+     * *********************************************************************** * * *
      *************************************************************************/
 
     private static final Object USER_DATA_KEY = new Object();
@@ -857,8 +859,8 @@ public abstract class Node implements EventTarget, Styleable {
         return getProperties().get(USER_DATA_KEY);
     }
 
-    /**************************************************************************
-     * * *
+    /*
+     * ************************************************************************ * *
      *************************************************************************/
 
     /**
@@ -1728,8 +1730,8 @@ public abstract class Node implements EventTarget, Styleable {
     // public final InputMap<?> getInputMap() { return inputMapProperty().getValue(); }
     // private ObjectProperty<InputMap<?>> inputMap;
 
-    /**************************************************************************
-     * * *
+    /*
+     * ************************************************************************ * *
      *************************************************************************/
     /**
      * Defines how the picking computation is done for this node when triggered by a
@@ -2395,9 +2397,9 @@ public abstract class Node implements EventTarget, Styleable {
         return (P) peer;
     }
 
-    /***************************************************************************
-     * * Initialization * * To Note limit the number of bounds computations and improve startup *
-     * performance. * *
+    /*
+     * ************************************************************************* * Initialization *
+     * * To Note limit the number of bounds computations and improve startup * performance. * *
      **************************************************************************/
 
     /**
@@ -2414,8 +2416,9 @@ public abstract class Node implements EventTarget, Styleable {
         // }
     }
 
-    /***************************************************************************
-     * * Layout related APIs. * *
+    /*
+     * ************************************************************************* * Layout related
+     * APIs. * *
      **************************************************************************/
     /**
      * Defines whether or not this node's layout will be managed by it's parent. If the node is
@@ -3701,9 +3704,10 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /***************************************************************************
-     * * Geometry and coordinate system related APIs. For example, methods * related to containment,
-     * intersection, coordinate space conversion, etc. * *
+    /*
+     * ************************************************************************* * Geometry and
+     * coordinate system related APIs. For example, methods * related to containment, intersection,
+     * coordinate space conversion, etc. * *
      **************************************************************************/
 
     /**
@@ -4692,8 +4696,9 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /***************************************************************************
-     * * Mouse event related APIs * *
+    /*
+     * ************************************************************************* * Mouse event
+     * related APIs * *
      **************************************************************************/
 
     /**
@@ -5000,8 +5005,9 @@ public abstract class Node implements EventTarget, Styleable {
         return ((a < EPSILON_ABSOLUTE) && (a > -EPSILON_ABSOLUTE));
     }
 
-    /***************************************************************************
-     * * viewOrder property handling * *
+    /*
+     * ************************************************************************* * viewOrder
+     * property handling * *
      **************************************************************************/
 
     /**
@@ -5040,8 +5046,9 @@ public abstract class Node implements EventTarget, Styleable {
         return (miscProperties == null) ? DEFAULT_VIEW_ORDER : miscProperties.getViewOrder();
     }
 
-    /***************************************************************************
-     * * Transformations * *
+    /*
+     * ************************************************************************* * Transformations *
+     * *
      **************************************************************************/
     /**
      * The {@code ObservableList} of custom {@link javafx.scene.transform.Transform}s to be applied
@@ -5923,8 +5930,9 @@ public abstract class Node implements EventTarget, Styleable {
     // Private Implementation
     ////////////////////////////
 
-    /***************************************************************************
-     * * Event Handler Properties * *
+    /*
+     * ************************************************************************* * Event Handler
+     * Properties * *
      **************************************************************************/
 
     private EventHandlerProperties eventHandlerProperties;
@@ -5937,8 +5945,9 @@ public abstract class Node implements EventTarget, Styleable {
         return eventHandlerProperties;
     }
 
-    /***************************************************************************
-     * * Component Orientation Properties * *
+    /*
+     * ************************************************************************* * Component
+     * Orientation Properties * *
      **************************************************************************/
 
     private ObjectProperty<NodeOrientation> nodeOrientation;
@@ -6193,8 +6202,9 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /***************************************************************************
-     * * Misc Seldom Used Properties * *
+    /*
+     * ************************************************************************* * Misc Seldom Used
+     * Properties * *
      **************************************************************************/
 
     private MiscProperties miscProperties;
@@ -7475,8 +7485,9 @@ public abstract class Node implements EventTarget, Styleable {
         return getMiscProperties().inputMethodRequestsProperty();
     }
 
-    /***************************************************************************
-     * * Focus Traversal * *
+    /*
+     * ************************************************************************* * Focus Traversal *
+     * *
      **************************************************************************/
 
     /**
@@ -7931,8 +7942,9 @@ public abstract class Node implements EventTarget, Styleable {
      */
     private Node labeledBy = null;
 
-    /***************************************************************************
-     * * Event Dispatch * *
+    /*
+     * ************************************************************************* * Event Dispatch *
+     * *
      **************************************************************************/
 
     // PENDING_DOC_REVIEW
@@ -8133,8 +8145,9 @@ public abstract class Node implements EventTarget, Styleable {
         Event.fireEvent(this, event);
     }
 
-    /***************************************************************************
-     * * Stylesheet Handling * *
+    /*
+     * ************************************************************************* * Stylesheet
+     * Handling * *
      **************************************************************************/
 
     /**
@@ -8423,7 +8436,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+        public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
 
@@ -9304,7 +9317,7 @@ public abstract class Node implements EventTarget, Styleable {
         if (accessible == null) {
             accessible = Application.GetApplication().createAccessible();
             accessible.setEventHandler(new Accessible.EventHandler() {
-                @SuppressWarnings("deprecation")
+                @SuppressWarnings("removal")
                 @Override
                 public AccessControlContext getAccessControlContext() {
                     Scene scene = getScene();

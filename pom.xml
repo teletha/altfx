@@ -10,21 +10,21 @@
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-controls</artifactId>
-			<version>[17-ea+5,)</version>
+			<version>[18-ea+2,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-media</artifactId>
-			<version>[17-ea+5,)</version>
+			<version>[18-ea+2,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-web</artifactId>
-			<version>[17-ea+5,)</version>
+			<version>[18-ea+2,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
