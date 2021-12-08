@@ -10,31 +10,25 @@
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-controls</artifactId>
-			<version>[18-ea+2,)</version>
+			<version>[18-ea+7,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-media</artifactId>
-			<version>[18-ea+2,)</version>
+			<version>[18-ea+7,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-web</artifactId>
-			<version>[18-ea+2,)</version>
+			<version>[18-ea+7,)</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 	</dependencies>
-	<licenses>
-		<license>
-			<name>The MIT License</name>
-			<url>https://opensource.org/licenses/MIT</url>
-		</license>
-	</licenses>
 	<repositories>
 		<repository>
 			<id>Maven</id>
@@ -54,7 +48,7 @@
 		<developerConnection>scm:git:https://github.com/teletha/viewtify-cutomfx.git</developerConnection>
 	</scm>
 	<issueManagement>
-		<system>GitHub</system>
+		<system>github</system>
 		<url>https://github.com/teletha/viewtify-cutomfx/issues</url>
 	</issueManagement>
 	<developers/>
