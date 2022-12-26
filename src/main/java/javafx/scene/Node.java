@@ -828,7 +828,7 @@ public abstract class Node implements EventTarget, Styleable {
      */
     public final ObservableMap<Object, Object> getProperties() {
         if (properties == null) {
-            properties = FXCollections.observableMap(new HashMap<Object, Object>());
+            properties = FXCollections.observableMap(new HashMap<>());
         }
         return properties;
     }
@@ -891,13 +891,13 @@ public abstract class Node implements EventTarget, Styleable {
 
     private ReadOnlyObjectWrapper<Parent> parentPropertyImpl() {
         if (parent == null) {
-            parent = new ReadOnlyObjectWrapper<Parent>() {
+            parent = new ReadOnlyObjectWrapper<>() {
                 private Parent oldParent;
 
                 @Override
                 protected void invalidated() {
                     if (oldParent != null) {
-                        updateRemovedParentFocus(oldParent);
+                        clearParentsFocusWithin(oldParent);
                         oldParent.disabledProperty().removeListener(parentDisabledChangedListener);
                         oldParent.treeVisibleProperty().removeListener(parentTreeVisibleChangedListener);
                         if (nodeTransformation != null && nodeTransformation.listenerReasons > 0) {
@@ -963,7 +963,7 @@ public abstract class Node implements EventTarget, Styleable {
      *
      * @defaultValue null
      */
-    private ReadOnlyObjectWrapperManualFire<Scene> scene = new ReadOnlyObjectWrapperManualFire<Scene>();
+    private ReadOnlyObjectWrapperManualFire<Scene> scene = new ReadOnlyObjectWrapperManualFire<>();
 
     private class ReadOnlyObjectWrapperManualFire<T> extends ReadOnlyObjectWrapper<T> {
         @Override
@@ -1180,7 +1180,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @see <a href="http://www.w3.org/TR/css3-selectors/#class-html">CSS3 class selectors</a>
      * @defaultValue null
      */
-    private ObservableList<String> styleClass = new TrackableObservableList<String>() {
+    private ObservableList<String> styleClass = new TrackableObservableList<>() {
         @Override
         protected void onChanged(Change<String> c) {
             reapplyCSS();
@@ -1868,7 +1868,7 @@ public abstract class Node implements EventTarget, Styleable {
         final Set<Node> empty = Collections.emptySet();
         if (s == null) return empty;
         List<Node> results = lookupAll(s, null);
-        return results == null ? empty : new UnmodifiableListSet<Node>(results);
+        return results == null ? empty : new UnmodifiableListSet<>(results);
     }
 
     /**
@@ -1882,7 +1882,7 @@ public abstract class Node implements EventTarget, Styleable {
         if (selector.applies(this)) {
             // Lazily create the set to reduce some trash.
             if (results == null) {
-                results = new LinkedList<Node>();
+                results = new LinkedList<>();
             }
             results.add(this);
         }
@@ -2381,7 +2381,6 @@ public abstract class Node implements EventTarget, Styleable {
      */
     private NGNode peer;
 
-    @SuppressWarnings("CallToPrintStackTrace")
     <P extends NGNode> P getPeer() {
         if (Utils.assertionEnabled()) {
             // Assertion checking code
@@ -5576,7 +5575,7 @@ public abstract class Node implements EventTarget, Styleable {
             public void addListener(InvalidationListener listener) {
                 incListenerReasons();
                 if (localToSceneListeners == null) {
-                    localToSceneListeners = new LinkedList<Object>();
+                    localToSceneListeners = new LinkedList<>();
                 }
                 localToSceneListeners.add(listener);
                 super.addListener(listener);
@@ -5586,7 +5585,7 @@ public abstract class Node implements EventTarget, Styleable {
             public void addListener(ChangeListener<? super Transform> listener) {
                 incListenerReasons();
                 if (localToSceneListeners == null) {
-                    localToSceneListeners = new LinkedList<Object>();
+                    localToSceneListeners = new LinkedList<>();
                 }
                 localToSceneListeners.add(listener);
                 super.addListener(listener);
@@ -5868,7 +5867,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         public ObservableList<Transform> getTransforms() {
             if (transforms == null) {
-                transforms = new TrackableObservableList<Transform>() {
+                transforms = new TrackableObservableList<>() {
                     @Override
                     protected void onChanged(Change<Transform> c) {
                         while (c.next()) {
@@ -6668,7 +6667,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         public ObjectProperty<InputMethodRequests> inputMethodRequestsProperty() {
             if (inputMethodRequests == null) {
-                inputMethodRequests = new SimpleObjectProperty<InputMethodRequests>(Node.this, "inputMethodRequests", DEFAULT_INPUT_METHOD_REQUESTS);
+                inputMethodRequests = new SimpleObjectProperty<>(Node.this, "inputMethodRequests", DEFAULT_INPUT_METHOD_REQUESTS);
             }
             return inputMethodRequests;
         }
@@ -7568,15 +7567,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Called when the current node was removed from the scene graph in order to clear the focus
-     * bits of the former parents.
+     * Called when the current node was removed from the scene graph. If the current node has the
+     * focusWithin bit, we also need to clear the focusWithin bits of this node's parents. Note that
+     * a scene graph can have more than a single focused node, for example when a PopupWindow is
+     * used to present a branch of the scene graph. Since we need to preserve multi-level focus, we
+     * need to stop clearing the focusWithin bits if we encounter a parent node that is focused.
      */
-    private void updateRemovedParentFocus(Node oldParent) {
+    private void clearParentsFocusWithin(Node oldParent) {
         if (oldParent != null && focusWithin.get()) {
             Node node = oldParent;
-            while (node != null) {
-                node.focused.set(false);
-                node.focusVisible.set(false);
+            while (node != null && !node.focused.get()) {
                 node.focusWithin.set(false);
                 node = node.getParent();
             }
@@ -7622,7 +7622,7 @@ public abstract class Node implements EventTarget, Styleable {
                 do {
                     node.focusWithin.set(value);
                     node = node.getParent();
-                } while (node != null);
+                } while (node != null && !node.focused.get());
             }
         }
     };
@@ -8171,7 +8171,7 @@ public abstract class Node implements EventTarget, Styleable {
     private void initializeInternalEventDispatcher() {
         if (internalEventDispatcher == null) {
             internalEventDispatcher = createInternalEventDispatcher();
-            eventDispatcher = new SimpleObjectProperty<EventDispatcher>(Node.this, "eventDispatcher", internalEventDispatcher);
+            eventDispatcher = new SimpleObjectProperty<>(Node.this, "eventDispatcher", internalEventDispatcher);
         }
     }
 
@@ -8335,7 +8335,7 @@ public abstract class Node implements EventTarget, Styleable {
      */
     public static class StyleableProperties {
 
-        private static final CssMetaData<Node, Cursor> CURSOR = new CssMetaData<Node, Cursor>("-fx-cursor", CursorConverter.getInstance()) {
+        private static final CssMetaData<Node, Cursor> CURSOR = new CssMetaData<>("-fx-cursor", CursorConverter.getInstance()) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8356,7 +8356,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         };
 
-        private static final CssMetaData<Node, Effect> EFFECT = new CssMetaData<Node, Effect>("-fx-effect", EffectConverter.getInstance()) {
+        private static final CssMetaData<Node, Effect> EFFECT = new CssMetaData<>("-fx-effect", EffectConverter.getInstance()) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8369,7 +8369,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Boolean> FOCUS_TRAVERSABLE = new CssMetaData<Node, Boolean>("-fx-focus-traversable", BooleanConverter
+        private static final CssMetaData<Node, Boolean> FOCUS_TRAVERSABLE = new CssMetaData<>("-fx-focus-traversable", BooleanConverter
                 .getInstance(), Boolean.FALSE) {
 
             @Override
@@ -8391,8 +8391,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         };
 
-        private static final CssMetaData<Node, Number> OPACITY = new CssMetaData<Node, Number>("-fx-opacity", SizeConverter
-                .getInstance(), 1.0) {
+        private static final CssMetaData<Node, Number> OPACITY = new CssMetaData<>("-fx-opacity", SizeConverter.getInstance(), 1.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8405,7 +8404,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, BlendMode> BLEND_MODE = new CssMetaData<Node, BlendMode>("-fx-blend-mode", new EnumConverter<BlendMode>(BlendMode.class)) {
+        private static final CssMetaData<Node, BlendMode> BLEND_MODE = new CssMetaData<>("-fx-blend-mode", new EnumConverter<>(BlendMode.class)) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8418,8 +8417,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> ROTATE = new CssMetaData<Node, Number>("-fx-rotate", SizeConverter
-                .getInstance(), 0.0) {
+        private static final CssMetaData<Node, Number> ROTATE = new CssMetaData<>("-fx-rotate", SizeConverter.getInstance(), 0.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8432,8 +8430,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> SCALE_X = new CssMetaData<Node, Number>("-fx-scale-x", SizeConverter
-                .getInstance(), 1.0) {
+        private static final CssMetaData<Node, Number> SCALE_X = new CssMetaData<>("-fx-scale-x", SizeConverter.getInstance(), 1.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8446,8 +8443,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> SCALE_Y = new CssMetaData<Node, Number>("-fx-scale-y", SizeConverter
-                .getInstance(), 1.0) {
+        private static final CssMetaData<Node, Number> SCALE_Y = new CssMetaData<>("-fx-scale-y", SizeConverter.getInstance(), 1.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8460,8 +8456,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> SCALE_Z = new CssMetaData<Node, Number>("-fx-scale-z", SizeConverter
-                .getInstance(), 1.0) {
+        private static final CssMetaData<Node, Number> SCALE_Z = new CssMetaData<>("-fx-scale-z", SizeConverter.getInstance(), 1.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8474,7 +8469,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> TRANSLATE_X = new CssMetaData<Node, Number>("-fx-translate-x", SizeConverter
+        private static final CssMetaData<Node, Number> TRANSLATE_X = new CssMetaData<>("-fx-translate-x", SizeConverter
                 .getInstance(), 0.0) {
 
             @Override
@@ -8489,7 +8484,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> TRANSLATE_Y = new CssMetaData<Node, Number>("-fx-translate-y", SizeConverter
+        private static final CssMetaData<Node, Number> TRANSLATE_Y = new CssMetaData<>("-fx-translate-y", SizeConverter
                 .getInstance(), 0.0) {
 
             @Override
@@ -8504,7 +8499,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> TRANSLATE_Z = new CssMetaData<Node, Number>("-fx-translate-z", SizeConverter
+        private static final CssMetaData<Node, Number> TRANSLATE_Z = new CssMetaData<>("-fx-translate-z", SizeConverter
                 .getInstance(), 0.0) {
 
             @Override
@@ -8519,8 +8514,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Number> VIEW_ORDER = new CssMetaData<Node, Number>("-fx-view-order", SizeConverter
-                .getInstance(), 0.0) {
+        private static final CssMetaData<Node, Number> VIEW_ORDER = new CssMetaData<>("-fx-view-order", SizeConverter.getInstance(), 0.0) {
 
             @Override
             public boolean isSettable(Node node) {
@@ -8533,7 +8527,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Boolean> VISIBILITY = new CssMetaData<Node, Boolean>("visibility", new StyleConverter<String, Boolean>() {
+        private static final CssMetaData<Node, Boolean> VISIBILITY = new CssMetaData<>("visibility", new StyleConverter<String, Boolean>() {
 
             @Override
             // [ visible | hidden | collapse | inherit ]
@@ -8555,7 +8549,7 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        private static final CssMetaData<Node, Boolean> MANAGED = new CssMetaData<Node, Boolean>("-fx-managed", BooleanConverter
+        private static final CssMetaData<Node, Boolean> MANAGED = new CssMetaData<>("-fx-managed", BooleanConverter
                 .getInstance(), Boolean.TRUE) {
 
             @Override
@@ -8569,11 +8563,11 @@ public abstract class Node implements EventTarget, Styleable {
             }
         };
 
-        public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+        public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
 
-            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<CssMetaData<? extends Styleable, ?>>();
+            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>();
             styleables.add(CURSOR);
             styleables.add(EFFECT);
             styleables.add(FOCUS_TRAVERSABLE);
@@ -9224,7 +9218,7 @@ public abstract class Node implements EventTarget, Styleable {
 
     public final ObjectProperty<AccessibleRole> accessibleRoleProperty() {
         if (accessibleRole == null) {
-            accessibleRole = new SimpleObjectProperty<AccessibleRole>(this, "accessibleRole", AccessibleRole.NODE);
+            accessibleRole = new SimpleObjectProperty<>(this, "accessibleRole", AccessibleRole.NODE);
         }
         return accessibleRole;
     }
@@ -9318,7 +9312,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         ObjectProperty<String> getAccessibleRoleDescription() {
             if (accessibleRoleDescription == null) {
-                accessibleRoleDescription = new SimpleObjectProperty<String>(Node.this, "accessibleRoleDescription", null);
+                accessibleRoleDescription = new SimpleObjectProperty<>(Node.this, "accessibleRoleDescription", null);
             }
             return accessibleRoleDescription;
         }
@@ -9327,7 +9321,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         ObjectProperty<String> getAccessibleText() {
             if (accessibleText == null) {
-                accessibleText = new SimpleObjectProperty<String>(Node.this, "accessibleText", null);
+                accessibleText = new SimpleObjectProperty<>(Node.this, "accessibleText", null);
             }
             return accessibleText;
         }
@@ -9336,7 +9330,7 @@ public abstract class Node implements EventTarget, Styleable {
 
         ObjectProperty<String> getAccessibleHelp() {
             if (accessibleHelp == null) {
-                accessibleHelp = new SimpleObjectProperty<String>(Node.this, "accessibleHelp", null);
+                accessibleHelp = new SimpleObjectProperty<>(Node.this, "accessibleHelp", null);
             }
             return accessibleHelp;
         }
