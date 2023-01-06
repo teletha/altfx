@@ -122,7 +122,7 @@ Altfx depends on the following products on runtime.
 
 
 ## License
-Copyright (C) 2022 The ALTFX Development Team
+Copyright (C) 2023 The ALTFX Development Team
 
 MIT License
 
