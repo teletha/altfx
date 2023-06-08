@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/teletha/altfx/compare/v1.1.1...v1.2.0) (2023-06-08)
+
+
+### Features
+
+* Enabled Monocle to compile with the latest version of Javafx. ([be15d6f](https://github.com/teletha/altfx/commit/be15d6f2cd7fe20b2aa647825bd35db7cfc980bd))
+* update javafx ([dd83e3d](https://github.com/teletha/altfx/commit/dd83e3ddbd9fad7f9aff71663514d38cfb9e6559))
+* update javafx to 20-ea+11 ([9f05eec](https://github.com/teletha/altfx/commit/9f05eec12abed8a3758d0ddfc6765bb40a559c4f))
+* update javafx. ([ab828e3](https://github.com/teletha/altfx/commit/ab828e3d440b2b27ce6da9166ca9e901e3a913d0))
+* Update javafx. ([5d8bcd4](https://github.com/teletha/altfx/commit/5d8bcd4a34ea64906fbb88cbaf52a82bb715871c))
+
+
+### Bug Fixes
+
+* update javafx ([ac1f7e7](https://github.com/teletha/altfx/commit/ac1f7e7946d2f288ffdf2aa45e708b38fbc2841a))
+
 ### [1.1.1](https://www.github.com/Teletha/altfx/compare/v1.1.0...v1.1.1) (2021-03-29)
 
 
