@@ -11,9 +11,11 @@ public class Project extends bee.api.Project {
     {
         product("com.github.teletha", "altfx", ref("version.txt"));
 
-        require("org.openjfx", "javafx-controls");
-        require("org.openjfx", "javafx-media");
-        require("org.openjfx", "javafx-web");
+        String version = "LATEST";
+        require("org.openjfx", "javafx-controls", version);
+        require("org.openjfx", "javafx-media", version);
+        require("org.openjfx", "javafx-web", version);
+        require("org.testfx", "openjfx-monocle", "jdk-12.0.1+2");
 
         versionControlSystem("https://github.com/teletha/viewtify-cutomfx");
     }
