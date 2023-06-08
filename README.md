@@ -108,16 +108,17 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 
 ## Dependency
 Altfx depends on the following products on runtime.
-* [javafx-base-20-ea+11](https://mvnrepository.com/artifact/org.openjfx/javafx-base/20-ea+11)
-* [javafx-base-20-ea+11-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/20-ea+11)
-* [javafx-controls-20-ea+11](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/20-ea+11)
-* [javafx-controls-20-ea+11-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/20-ea+11)
-* [javafx-graphics-20-ea+11](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/20-ea+11)
-* [javafx-graphics-20-ea+11-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/20-ea+11)
-* [javafx-media-20-ea+11](https://mvnrepository.com/artifact/org.openjfx/javafx-media/20-ea+11)
-* [javafx-media-20-ea+11-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/20-ea+11)
-* [javafx-web-20-ea+11](https://mvnrepository.com/artifact/org.openjfx/javafx-web/20-ea+11)
-* [javafx-web-20-ea+11-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/20-ea+11)
+* [javafx-base-12.0.1](https://mvnrepository.com/artifact/org.openjfx/javafx-base/12.0.1)
+* [javafx-base-12.0.1-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/12.0.1)
+* [javafx-controls-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/21-ea+17)
+* [javafx-controls-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/21-ea+17)
+* [javafx-graphics-12.0.1](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/12.0.1)
+* [javafx-graphics-12.0.1-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/12.0.1)
+* [javafx-media-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-media/21-ea+17)
+* [javafx-media-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/21-ea+17)
+* [javafx-web-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-web/21-ea+17)
+* [javafx-web-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/21-ea+17)
+* [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
 

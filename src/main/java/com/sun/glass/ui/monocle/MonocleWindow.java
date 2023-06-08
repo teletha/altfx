@@ -176,7 +176,6 @@ final class MonocleWindow extends Window {
 
     @Override
     protected void _updateViewSize(long ptr) {
-
     }
 
     /**
