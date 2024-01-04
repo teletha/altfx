@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/teletha/altfx/compare/v1.2.0...v1.3.0) (2024-01-04)
+
+
+### Features
+
+* update javafx ([85d2af1](https://github.com/teletha/altfx/commit/85d2af133b3dced19ca7503bbc48abaa1b3b8d82))
+
+
+### Bug Fixes
+
+* update license ([e352c28](https://github.com/teletha/altfx/commit/e352c282b22e8beb899bbd74741ad2940fd974f4))
+
 ## [1.2.0](https://github.com/teletha/altfx/compare/v1.1.1...v1.2.0) (2023-06-08)
 
 
