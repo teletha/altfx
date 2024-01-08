@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/teletha/altfx/compare/v1.3.0...v1.3.1) (2024-01-08)
+
+
+### Bug Fixes
+
+* update ci process ([7978b58](https://github.com/teletha/altfx/commit/7978b58e299267ebedf0f579c64d1923af88e3b5))
+
 ## [1.3.0](https://github.com/teletha/altfx/compare/v1.2.0...v1.3.0) (2024-01-04)
 
 
