@@ -43,7 +43,7 @@ Add it into in the dependencies element like so:
 <dependency>
     <groupId>com.github.teletha</groupId>
     <artifactId>altfx</artifactId>
-    <version>1.1.1</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 #### [Gradle](https://gradle.org/)
@@ -56,7 +56,7 @@ repositories {
 Add it into the dependencies section like so:
 ```gradle
 dependencies {
-    implementation 'com.github.teletha:altfx:1.1.1'
+    implementation 'com.github.teletha:altfx:1.3.0'
 }
 ```
 #### [SBT](https://www.scala-sbt.org/)
@@ -66,7 +66,7 @@ resolvers += "jitpack" at "https://jitpack.io"
 ```
 Add it into the libraryDependencies section like so:
 ```scala
-libraryDependencies += "com.github.teletha" % "altfx" % "1.1.1"
+libraryDependencies += "com.github.teletha" % "altfx" % "1.3.0"
 ```
 #### [Leiningen](https://leiningen.org/)
 Add JitPack repository at the end of repositories in your project.clj:
@@ -75,12 +75,12 @@ Add JitPack repository at the end of repositories in your project.clj:
 ```
 Add it into the dependencies section like so:
 ```clj
-:dependencies [[com.github.teletha/altfx "1.1.1"]]
+:dependencies [[com.github.teletha/altfx "1.3.0"]]
 ```
 #### [Bee](https://teletha.github.io/bee)
 Add it into your project definition class like so:
 ```java
-require("com.github.teletha", "altfx", "1.1.1");
+require("com.github.teletha", "altfx", "1.3.0");
 ```
 <p align="right"><a href="#top">back to top</a></p>
 
@@ -108,22 +108,22 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 
 ## Dependency
 Altfx depends on the following products on runtime.
-* [javafx-base-12.0.1](https://mvnrepository.com/artifact/org.openjfx/javafx-base/12.0.1)
-* [javafx-base-12.0.1-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/12.0.1)
-* [javafx-controls-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/21-ea+17)
-* [javafx-controls-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/21-ea+17)
-* [javafx-graphics-12.0.1](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/12.0.1)
-* [javafx-graphics-12.0.1-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/12.0.1)
-* [javafx-media-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-media/21-ea+17)
-* [javafx-media-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/21-ea+17)
-* [javafx-web-21-ea+17](https://mvnrepository.com/artifact/org.openjfx/javafx-web/21-ea+17)
-* [javafx-web-21-ea+17-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/21-ea+17)
+* [javafx-base-22-ea+16](https://mvnrepository.com/artifact/org.openjfx/javafx-base/22-ea+16)
+* [javafx-base-22-ea+16-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/22-ea+16)
+* [javafx-controls-22-ea+16](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/22-ea+16)
+* [javafx-controls-22-ea+16-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/22-ea+16)
+* [javafx-graphics-22-ea+16](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/22-ea+16)
+* [javafx-graphics-22-ea+16-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/22-ea+16)
+* [javafx-media-22-ea+16](https://mvnrepository.com/artifact/org.openjfx/javafx-media/22-ea+16)
+* [javafx-media-22-ea+16-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/22-ea+16)
+* [javafx-web-22-ea+16](https://mvnrepository.com/artifact/org.openjfx/javafx-web/22-ea+16)
+* [javafx-web-22-ea+16-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/22-ea+16)
 * [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
 
 ## License
-Copyright (C) 2023 The ALTFX Development Team
+Copyright (C) 2024 The ALTFX Development Team
 
 MIT License
 
