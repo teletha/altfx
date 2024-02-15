@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2023, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,6 +34,50 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.sun.glass.ui.Accessible;
+import com.sun.glass.ui.Application;
+import com.sun.javafx.beans.IDProperty;
+import com.sun.javafx.beans.event.AbstractNotifyListener;
+import com.sun.javafx.collections.TrackableObservableList;
+import com.sun.javafx.collections.UnmodifiableListSet;
+import com.sun.javafx.css.PseudoClassState;
+import com.sun.javafx.effect.EffectDirtyBits;
+import com.sun.javafx.geom.BaseBounds;
+import com.sun.javafx.geom.BoxBounds;
+import com.sun.javafx.geom.PickRay;
+import com.sun.javafx.geom.RectBounds;
+import com.sun.javafx.geom.Vec3d;
+import com.sun.javafx.geom.transform.Affine3D;
+import com.sun.javafx.geom.transform.BaseTransform;
+import com.sun.javafx.geom.transform.GeneralTransform3D;
+import com.sun.javafx.geom.transform.NoninvertibleTransformException;
+import com.sun.javafx.geometry.BoundsUtils;
+import com.sun.javafx.logging.PlatformLogger;
+import com.sun.javafx.logging.PlatformLogger.Level;
+import com.sun.javafx.perf.PerformanceTracker;
+import com.sun.javafx.scene.BoundsAccessor;
+import com.sun.javafx.scene.CameraHelper;
+import com.sun.javafx.scene.CssFlags;
+import com.sun.javafx.scene.DirtyBits;
+import com.sun.javafx.scene.EventHandlerProperties;
+import com.sun.javafx.scene.LayoutFlags;
+import com.sun.javafx.scene.NodeEventDispatcher;
+import com.sun.javafx.scene.NodeHelper;
+import com.sun.javafx.scene.SceneHelper;
+import com.sun.javafx.scene.SceneUtils;
+import com.sun.javafx.scene.input.PickResultChooser;
+import com.sun.javafx.scene.transform.TransformHelper;
+import com.sun.javafx.scene.transform.TransformUtils;
+import com.sun.javafx.scene.traversal.Direction;
+import com.sun.javafx.scene.traversal.TraversalMethod;
+import com.sun.javafx.sg.prism.NGNode;
+import com.sun.javafx.tk.Toolkit;
+import com.sun.javafx.util.Logging;
+import com.sun.javafx.util.TempState;
+import com.sun.javafx.util.Utils;
+import com.sun.prism.impl.PrismSettings;
+import com.sun.scenario.effect.EffectHelper;
 
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -116,50 +160,6 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
 import javafx.stage.Window;
 import javafx.util.Callback;
-
-import com.sun.glass.ui.Accessible;
-import com.sun.glass.ui.Application;
-import com.sun.javafx.beans.IDProperty;
-import com.sun.javafx.beans.event.AbstractNotifyListener;
-import com.sun.javafx.collections.TrackableObservableList;
-import com.sun.javafx.collections.UnmodifiableListSet;
-import com.sun.javafx.css.PseudoClassState;
-import com.sun.javafx.effect.EffectDirtyBits;
-import com.sun.javafx.geom.BaseBounds;
-import com.sun.javafx.geom.BoxBounds;
-import com.sun.javafx.geom.PickRay;
-import com.sun.javafx.geom.RectBounds;
-import com.sun.javafx.geom.Vec3d;
-import com.sun.javafx.geom.transform.Affine3D;
-import com.sun.javafx.geom.transform.BaseTransform;
-import com.sun.javafx.geom.transform.GeneralTransform3D;
-import com.sun.javafx.geom.transform.NoninvertibleTransformException;
-import com.sun.javafx.geometry.BoundsUtils;
-import com.sun.javafx.logging.PlatformLogger;
-import com.sun.javafx.logging.PlatformLogger.Level;
-import com.sun.javafx.perf.PerformanceTracker;
-import com.sun.javafx.scene.BoundsAccessor;
-import com.sun.javafx.scene.CameraHelper;
-import com.sun.javafx.scene.CssFlags;
-import com.sun.javafx.scene.DirtyBits;
-import com.sun.javafx.scene.EventHandlerProperties;
-import com.sun.javafx.scene.LayoutFlags;
-import com.sun.javafx.scene.NodeEventDispatcher;
-import com.sun.javafx.scene.NodeHelper;
-import com.sun.javafx.scene.SceneHelper;
-import com.sun.javafx.scene.SceneUtils;
-import com.sun.javafx.scene.input.PickResultChooser;
-import com.sun.javafx.scene.transform.TransformHelper;
-import com.sun.javafx.scene.transform.TransformUtils;
-import com.sun.javafx.scene.traversal.Direction;
-import com.sun.javafx.scene.traversal.TraversalMethod;
-import com.sun.javafx.sg.prism.NGNode;
-import com.sun.javafx.tk.Toolkit;
-import com.sun.javafx.util.Logging;
-import com.sun.javafx.util.TempState;
-import com.sun.javafx.util.Utils;
-import com.sun.prism.impl.PrismSettings;
-import com.sun.scenario.effect.EffectHelper;
 
 /**
  * Base class for scene graph nodes. A scene graph is a set of tree data structures where every item
@@ -1938,7 +1938,7 @@ public abstract class Node implements EventTarget, Styleable {
      */
     private boolean selectorMatches(Selector s) {
         boolean matches = s != null && s.applies(this);
-        if (matches && s != null && !s.createMatch().getPseudoClasses().isEmpty()) {
+        if (matches && !s.createMatch().getPseudoClasses().isEmpty()) {
             matches = s.stateMatches(this, this.getPseudoClassStates());
         }
         return matches;
@@ -2036,8 +2036,8 @@ public abstract class Node implements EventTarget, Styleable {
             w = tempBounds.getWidth();
             h = tempBounds.getHeight();
         }
-        WritableImage result = Scene.doSnapshot(getScene(), x, y, w, h, this, transform, params.isDepthBufferInternal(), params
-                .getFill(), params.getEffectiveCamera(), img);
+        WritableImage result = Scene.doSnapshot(getScene(), getSubScene(), x, y, w, h, this, transform, params
+                .isDepthBufferInternal(), params.getFill(), params.getEffectiveCamera(), img);
 
         return result;
     }
@@ -7574,11 +7574,16 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
+    /**
+     * .
+     */
     final void setFocusQuietly(boolean focused, boolean focusVisible) {
         this.focused.set(focused);
         this.focusVisible.set(focused && focusVisible);
     }
 
+    /**
+     */
     final void notifyFocusListeners() {
         focused.notifyListeners();
         focusVisible.notifyListeners();
