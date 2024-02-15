@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/teletha/altfx/compare/v1.3.0...v1.4.0) (2024-02-15)
+
+
+### Features
+
+* update javafx to 23-ea+3 ([90d979f](https://github.com/teletha/altfx/commit/90d979f0f791bd2f9a3af014ec6604bd49c1efd3))
+
+
+### Bug Fixes
+
+* update ci process ([7978b58](https://github.com/teletha/altfx/commit/7978b58e299267ebedf0f579c64d1923af88e3b5))
+
 ## [1.3.0](https://github.com/teletha/altfx/compare/v1.2.0...v1.3.0) (2024-01-04)
 
 
