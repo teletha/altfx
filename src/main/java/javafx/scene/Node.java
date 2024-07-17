@@ -27,6 +27,7 @@ package javafx.scene;
 
 import java.security.AccessControlContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -42,6 +43,10 @@ import com.sun.javafx.beans.event.AbstractNotifyListener;
 import com.sun.javafx.collections.TrackableObservableList;
 import com.sun.javafx.collections.UnmodifiableListSet;
 import com.sun.javafx.css.PseudoClassState;
+import com.sun.javafx.css.TransitionDefinition;
+import com.sun.javafx.css.TransitionDefinitionConverter;
+import com.sun.javafx.css.TransitionDefinitionCssMetaData;
+import com.sun.javafx.css.TransitionTimer;
 import com.sun.javafx.effect.EffectDirtyBits;
 import com.sun.javafx.geom.BaseBounds;
 import com.sun.javafx.geom.BoxBounds;
@@ -90,6 +95,7 @@ import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
+import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanPropertyBase;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -112,6 +118,7 @@ import javafx.css.PseudoClass;
 import javafx.css.Selector;
 import javafx.css.Style;
 import javafx.css.StyleConverter;
+import javafx.css.StyleOrigin;
 import javafx.css.Styleable;
 import javafx.css.StyleableBooleanProperty;
 import javafx.css.StyleableDoubleProperty;
@@ -162,132 +169,167 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 
 /**
- * Base class for scene graph nodes. A scene graph is a set of tree data structures where every item
- * has zero or one parent, and each item is either a "leaf" with zero sub-items or a "branch" with
- * zero or more sub-items.
+ * Base class for scene graph nodes. A scene graph is a set of tree data structures
+ * where every item has zero or one parent, and each item is either
+ * a "leaf" with zero sub-items or a "branch" with zero or more sub-items.
  * <p>
- * Each item in the scene graph is called a {@code Node}. Branch nodes are of type {@link Parent},
- * whose concrete subclasses are {@link Group}, {@link javafx.scene.layout.Region}, and
- * {@link javafx.scene.control.Control}, or subclasses thereof.
+ * Each item in the scene graph is called a {@code Node}. Branch nodes are
+ * of type {@link Parent}, whose concrete subclasses are {@link Group},
+ * {@link javafx.scene.layout.Region}, and {@link javafx.scene.control.Control},
+ * or subclasses thereof.
  * <p>
- * Leaf nodes are classes such as {@link javafx.scene.shape.Rectangle},
- * {@link javafx.scene.text.Text}, {@link javafx.scene.image.ImageView},
- * {@link javafx.scene.media.MediaView}, or other such leaf classes which cannot have children. Only
- * a single node within each scene graph tree will have no parent, which is referred to as the
- * "root" node.
+ * Leaf nodes are classes such as
+ * {@link javafx.scene.shape.Rectangle}, {@link javafx.scene.text.Text},
+ * {@link javafx.scene.image.ImageView}, {@link javafx.scene.media.MediaView},
+ * or other such leaf classes which cannot have children. Only a single node within
+ * each scene graph tree will have no parent, which is referred to as the "root" node.
  * <p>
- * There may be several trees in the scene graph. Some trees may be part of a {@link Scene}, in
- * which case they are eligible to be displayed. Other trees might not be part of any {@link Scene}.
+ * There may be several trees in the scene graph. Some trees may be part of
+ * a {@link Scene}, in which case they are eligible to be displayed.
+ * Other trees might not be part of any {@link Scene}.
  * <p>
- * A node may occur at most once anywhere in the scene graph. Specifically, a node must appear no
- * more than once in all of the following: as the root node of a {@link Scene}, the children
- * ObservableList of a {@link Parent}, or as the clip of a {@link Node}.
+ * A node may occur at most once anywhere in the scene graph. Specifically,
+ * a node must appear no more than once in all of the following:
+ * as the root node of a {@link Scene},
+ * the children ObservableList of a {@link Parent},
+ * or as the clip of a {@link Node}.
  * <p>
- * The scene graph must not have cycles. A cycle would exist if a node is an ancestor of itself in
- * the tree, considering the {@link Group} content ObservableList, {@link Parent} children
- * ObservableList, and {@link Node} clip relationships mentioned above.
+ * The scene graph must not have cycles. A cycle would exist if a node is
+ * an ancestor of itself in the tree, considering the {@link Group} content
+ * ObservableList, {@link Parent} children ObservableList, and {@link Node} clip relationships
+ * mentioned above.
  * <p>
- * If a program adds a child node to a Parent (including Group, Region, etc) and that node is
- * already a child of a different Parent or the root of a Scene, the node is automatically (and
- * silently) removed from its former parent. If a program attempts to modify the scene graph in any
- * other way that violates the above rules, an exception is thrown, the modification attempt is
- * ignored and the scene graph is restored to its previous state.
+ * If a program adds a child node to a Parent (including Group, Region, etc)
+ * and that node is already a child of a different Parent or the root of a Scene,
+ * the node is automatically (and silently) removed from its former parent.
+ * If a program attempts to modify the scene graph in any other way that violates
+ * the above rules, an exception is thrown, the modification attempt is ignored
+ * and the scene graph is restored to its previous state.
  * <p>
- * It is possible to rearrange the structure of the scene graph, for example, to move a subtree from
- * one location in the scene graph to another. In order to do this, one would normally remove the
- * subtree from its old location before inserting it at the new location. However, the subtree will
- * be automatically removed as described above if the application doesn't explicitly remove it.
+ * It is possible to rearrange the structure of the scene graph, for
+ * example, to move a subtree from one location in the scene graph to
+ * another. In order to do this, one would normally remove the subtree from
+ * its old location before inserting it at the new location. However, the
+ * subtree will be automatically removed as described above if the application
+ * doesn't explicitly remove it.
  * <p>
- * Node objects may be constructed and modified on any thread as long they are not yet attached to a
- * {@link Scene} in a {@link Window} that is {@link Window#isShowing showing}. An application must
- * attach nodes to such a Scene or modify them on the JavaFX Application Thread.
+ * Node objects may be constructed and modified on any thread as long they are
+ * not yet attached to a {@link Scene} in a {@link Window} that is
+ * {@link Window#isShowing showing}.
+ * An application must attach nodes to such a Scene or modify them on the JavaFX
+ * Application Thread.
+ *
  * <p>
- * The JavaFX Application Thread is created as part of the startup process for the JavaFX runtime.
- * See the {@link javafx.application.Application} class and the {@link Platform#startup(Runnable)}
- * method for more information.
+ * The JavaFX Application Thread is created as part of the startup process for
+ * the JavaFX runtime. See the {@link javafx.application.Application} class and
+ * the {@link Platform#startup(Runnable)} method for more information.
  * </p>
+ *
  * <p>
- * An application should not extend the Node class directly. Doing so may lead to an
- * UnsupportedOperationException being thrown.
+ * An application should not extend the Node class directly. Doing so may lead to
+ * an UnsupportedOperationException being thrown.
  * </p>
+ *
  * <h2><a id="StringID">String ID</a></h2>
  * <p>
- * Each node in the scene graph can be given a unique {@link #idProperty id}. This id is much like
- * the "id" attribute of an HTML tag in that it is up to the designer and developer to ensure that
- * the {@code id} is unique within the scene graph. A convenience function called
- * {@link #lookup(String)} can be used to find a node with a unique id within the scene graph, or
- * within a subtree of the scene graph. The id can also be used identify nodes for applying styles;
- * see the CSS section below.
+ * Each node in the scene graph can be given a unique {@link #idProperty id}. This id is
+ * much like the "id" attribute of an HTML tag in that it is up to the designer
+ * and developer to ensure that the {@code id} is unique within the scene graph.
+ * A convenience function called {@link #lookup(String)} can be used to find
+ * a node with a unique id within the scene graph, or within a subtree of the
+ * scene graph. The id can also be used identify nodes for applying styles; see
+ * the CSS section below.
+ *
  * <h2><a id="CoordinateSystem">Coordinate System</a></h2>
  * <p>
- * The {@code Node} class defines a traditional computer graphics "local" coordinate system in which
- * the {@code x} axis increases to the right and the {@code y} axis increases downwards. The
- * concrete node classes for shapes provide variables for defining the geometry and location of the
- * shape within this local coordinate space. For example, {@link javafx.scene.shape.Rectangle}
- * provides {@code x}, {@code y}, {@code width}, {@code height} variables while
- * {@link javafx.scene.shape.Circle} provides {@code centerX}, {@code centerY}, and {@code radius}.
+ * The {@code Node} class defines a traditional computer graphics "local"
+ * coordinate system in which the {@code x} axis increases to the right and the
+ * {@code y} axis increases downwards. The concrete node classes for shapes
+ * provide variables for defining the geometry and location of the shape
+ * within this local coordinate space. For example,
+ * {@link javafx.scene.shape.Rectangle} provides {@code x}, {@code y},
+ * {@code width}, {@code height} variables while
+ * {@link javafx.scene.shape.Circle} provides {@code centerX}, {@code centerY},
+ * and {@code radius}.
  * <p>
- * At the device pixel level, integer coordinates map onto the corners and cracks between the pixels
- * and the centers of the pixels appear at the midpoints between integer pixel locations. Because
- * all coordinate values are specified with floating point numbers, coordinates can precisely point
- * to these corners (when the floating point values have exact integer values) or to any location on
- * the pixel. For example, a coordinate of {@code (0.5, 0.5)} would point to the center of the upper
- * left pixel on the {@code Stage}. Similarly, a rectangle at {@code (0, 0)} with dimensions of
- * {@code 10} by {@code 10} would span from the upper left corner of the upper left pixel on the
- * {@code Stage} to the lower right corner of the 10th pixel on the 10th scanline. The pixel center
- * of the last pixel inside that rectangle would be at the coordinates {@code (9.5, 9.5)}.
+ * At the device pixel level, integer coordinates map onto the corners and
+ * cracks between the pixels and the centers of the pixels appear at the
+ * midpoints between integer pixel locations. Because all coordinate values
+ * are specified with floating point numbers, coordinates can precisely
+ * point to these corners (when the floating point values have exact integer
+ * values) or to any location on the pixel. For example, a coordinate of
+ * {@code (0.5, 0.5)} would point to the center of the upper left pixel on the
+ * {@code Stage}. Similarly, a rectangle at {@code (0, 0)} with dimensions
+ * of {@code 10} by {@code 10} would span from the upper left corner of the
+ * upper left pixel on the {@code Stage} to the lower right corner of the
+ * 10th pixel on the 10th scanline. The pixel center of the last pixel
+ * inside that rectangle would be at the coordinates {@code (9.5, 9.5)}.
  * <p>
- * In practice, most nodes have transformations applied to their coordinate system as mentioned
- * below. As a result, the information above describing the alignment of device coordinates to the
- * pixel grid is relative to the transformed coordinates, not the local coordinates of the nodes.
- * The {@link javafx.scene.shape.Shape Shape} class describes some additional important
- * context-specific information about coordinate mapping and how it can affect rendering.
+ * In practice, most nodes have transformations applied to their coordinate
+ * system as mentioned below. As a result, the information above describing
+ * the alignment of device coordinates to the pixel grid is relative to
+ * the transformed coordinates, not the local coordinates of the nodes.
+ * The {@link javafx.scene.shape.Shape Shape} class describes some additional
+ * important context-specific information about coordinate mapping and how
+ * it can affect rendering.
+ *
  * <h2><a id="Transformations">Transformations</a></h2>
  * <p>
- * Any {@code Node} can have transformations applied to it. These include translation, rotation,
- * scaling, or shearing.
+ * Any {@code Node} can have transformations applied to it. These include
+ * translation, rotation, scaling, or shearing.
  * <p>
- * A <b>translation</b> transformation is one which shifts the origin of the node's coordinate space
- * along either the x or y axis. For example, if you create a {@link javafx.scene.shape.Rectangle}
- * which is drawn at the origin (x=0, y=0) and has a width of 100 and a height of 50, and then apply
- * a {@link javafx.scene.transform.Translate} with a shift of 10 along the x axis (x=10), then the
- * rectangle will appear drawn at (x=10, y=0) and remain 100 points wide and 50 tall. Note that the
- * origin was shifted, not the {@code x} variable of the rectangle.
+ * A <b>translation</b> transformation is one which shifts the origin of the
+ * node's coordinate space along either the x or y axis. For example, if you
+ * create a {@link javafx.scene.shape.Rectangle} which is drawn at the origin
+ * (x=0, y=0) and has a width of 100 and a height of 50, and then apply a
+ * {@link javafx.scene.transform.Translate} with a shift of 10 along the x axis
+ * (x=10), then the rectangle will appear drawn at (x=10, y=0) and remain
+ * 100 points wide and 50 tall. Note that the origin was shifted, not the
+ * {@code x} variable of the rectangle.
  * <p>
- * A common node transform is a translation by an integer distance, most often used to lay out nodes
- * on the stage. Such integer translations maintain the device pixel mapping so that local
- * coordinates that are integers still map to the cracks between pixels.
+ * A common node transform is a translation by an integer distance, most often
+ * used to lay out nodes on the stage. Such integer translations maintain the
+ * device pixel mapping so that local coordinates that are integers still
+ * map to the cracks between pixels.
  * <p>
- * A <b>rotation</b> transformation is one which rotates the coordinate space of the node about a
- * specified "pivot" point, causing the node to appear rotated. For example, if you create a
- * {@link javafx.scene.shape.Rectangle} which is drawn at the origin (x=0, y=0) and has a width of
- * 100 and height of 30 and you apply a {@link javafx.scene.transform.Rotate} with a 90 degree
- * rotation (angle=90) and a pivot at the origin (pivotX=0, pivotY=0), then the rectangle will be
- * drawn as if its x and y were zero but its height was 100 and its width -30. That is, it is as if
- * a pin is being stuck at the top left corner and the rectangle is rotating 90 degrees clockwise
- * around that pin. If the pivot point is instead placed in the center of the rectangle (at point
- * x=50, y=15) then the rectangle will instead appear to rotate about its center.
+ * A <b>rotation</b> transformation is one which rotates the coordinate space of
+ * the node about a specified "pivot" point, causing the node to appear rotated.
+ * For example, if you create a {@link javafx.scene.shape.Rectangle} which is
+ * drawn at the origin (x=0, y=0) and has a width of 100 and height of 30 and
+ * you apply a {@link javafx.scene.transform.Rotate} with a 90 degree rotation
+ * (angle=90) and a pivot at the origin (pivotX=0, pivotY=0), then
+ * the rectangle will be drawn as if its x and y were zero but its height was
+ * 100 and its width -30. That is, it is as if a pin is being stuck at the top
+ * left corner and the rectangle is rotating 90 degrees clockwise around that
+ * pin. If the pivot point is instead placed in the center of the rectangle
+ * (at point x=50, y=15) then the rectangle will instead appear to rotate about
+ * its center.
  * <p>
- * Note that as with all transformations, the x, y, width, and height variables of the rectangle
- * (which remain relative to the local coordinate space) have not changed, but rather the
- * transformation alters the entire coordinate space of the rectangle.
+ * Note that as with all transformations, the x, y, width, and height variables
+ * of the rectangle (which remain relative to the local coordinate space) have
+ * not changed, but rather the transformation alters the entire coordinate space
+ * of the rectangle.
  * <p>
- * A <b>scaling</b> transformation causes a node to either appear larger or smaller depending on the
- * scaling factor. Scaling alters the coordinate space of the node such that each unit of distance
- * along the axis in local coordinates is multiplied by the scale factor. As with rotation
- * transformations, scaling transformations are applied about a "pivot" point. You can think of this
- * as the point in the {@code Node} around which you "zoom". For example, if you create a
- * {@link javafx.scene.shape.Rectangle} with a {@code strokeWidth} of 5, and a width and height of
- * 50, and you apply a {@link javafx.scene.transform.Scale} with scale factors (x=2.0, y=2.0) and a
- * pivot at the origin (pivotX=0, pivotY=0), the entire rectangle (including the stroke) will double
- * in size, growing to the right and downwards from the origin.
+ * A <b>scaling</b> transformation causes a node to either appear larger or
+ * smaller depending on the scaling factor. Scaling alters the coordinate space
+ * of the node such that each unit of distance along the axis in local
+ * coordinates is multiplied by the scale factor. As with rotation
+ * transformations, scaling transformations are applied about a "pivot" point.
+ * You can think of this as the point in the {@code Node} around which you "zoom". For
+ * example, if you create a {@link javafx.scene.shape.Rectangle} with a
+ * {@code strokeWidth} of 5, and a width and height of 50, and you apply a
+ * {@link javafx.scene.transform.Scale} with scale factors (x=2.0, y=2.0) and
+ * a pivot at the origin (pivotX=0, pivotY=0), the entire rectangle
+ * (including the stroke) will double in size, growing to the right and
+ * downwards from the origin.
  * <p>
- * A <b>shearing</b> transformation, sometimes called a skew, effectively rotates one axis so that
- * the x and y axes are no longer perpendicular.
+ * A <b>shearing</b> transformation, sometimes called a skew, effectively
+ * rotates one axis so that the x and y axes are no longer perpendicular.
  * <p>
  * Multiple transformations may be applied to a node. Custom transforms are applied using the
  * {@link #getTransforms transforms} list. Predefined transforms are applied using the properties
- * specified below. The matrices that represent the transforms are multiplied in this order:
+ * specified below.
+ * The matrices that represent the transforms are multiplied in this order:
  * <ol>
  * <li>Layout ({@link #layoutXProperty layoutX}, {@link #layoutYProperty layoutY}) and translate
  * ({@link #translateXProperty translateX}, {@link #translateYProperty translateY},
@@ -298,69 +340,89 @@ import javafx.util.Callback;
  * <li>Transforms list ({@link #getTransforms transforms}) starting from element 0</li>
  * </ol>
  * The transforms are applied in the reverse order of the matrix multiplication outlined above: last
- * element of the transforms list to 0th element, scale, rotate, and layout and translate. By
- * applying the transforms in this order, the bounds in the local coordinates of the node are
- * transformed to the bounds in the parent coordinate of the node (see the
+ * element of the transforms list
+ * to 0th element, scale, rotate, and layout and translate. By applying the transforms in this
+ * order, the bounds in the local
+ * coordinates of the node are transformed to the bounds in the parent coordinate of the node (see
+ * the
  * <a href="#BoundingRectangles">Bounding Rectangles</a> section).
+ *
  * <h2><a id="BoundingRectangles">Bounding Rectangles</a></h2>
  * <p>
- * Since every {@code Node} has transformations, every Node's geometric bounding rectangle can be
- * described differently depending on whether transformations are accounted for or not.
+ * Since every {@code Node} has transformations, every Node's geometric
+ * bounding rectangle can be described differently depending on whether
+ * transformations are accounted for or not.
  * <p>
- * Each {@code Node} has a read-only {@link #boundsInLocalProperty boundsInLocal} variable which
- * specifies the bounding rectangle of the {@code Node} in untransformed local coordinates.
- * {@code boundsInLocal} includes the Node's shape geometry, including any space required for a
- * non-zero stroke that may fall outside the local position/size variables, and its
- * {@link #clipProperty clip} and {@link #effectProperty effect} variables.
+ * Each {@code Node} has a read-only {@link #boundsInLocalProperty boundsInLocal}
+ * variable which specifies the bounding rectangle of the {@code Node} in
+ * untransformed local coordinates. {@code boundsInLocal} includes the
+ * Node's shape geometry, including any space required for a
+ * non-zero stroke that may fall outside the local position/size variables,
+ * and its {@link #clipProperty clip} and {@link #effectProperty effect} variables.
  * <p>
  * Each {@code Node} also has a read-only {@link #boundsInParentProperty boundsInParent} variable
- * which specifies the bounding rectangle of the {@code Node} after all transformations have been
- * applied as specified in the <a href="#Transformations">Transformations</a> section. It is called
- * "boundsInParent" because the rectangle will be relative to the parent's coordinate system. This
- * is the 'visual' bounds of the node.
+ * which
+ * specifies the bounding rectangle of the {@code Node} after all transformations
+ * have been applied as specified in the <a href="#Transformations">Transformations</a> section.
+ * It is called "boundsInParent" because the rectangle will be relative to the
+ * parent's coordinate system. This is the 'visual' bounds of the node.
  * <p>
  * Finally, the {@link #layoutBoundsProperty layoutBounds} variable defines the rectangular bounds
- * of the {@code Node} that should be used as the basis for layout calculations and may differ from
- * the visual bounds of the node. For shapes, Text, and ImageView, layoutBounds by default includes
- * only the shape geometry, including space required for a non-zero {@code strokeWidth}, but does
- * <i>not</i> include the effect, clip, or any transforms. For resizable classes (Regions and
- * Controls) layoutBounds will always map to {@code 0,0 width x height}.
+ * of
+ * the {@code Node} that should be used as the basis for layout calculations and
+ * may differ from the visual bounds of the node. For shapes, Text, and ImageView,
+ * layoutBounds by default includes only the shape geometry, including space required
+ * for a non-zero {@code strokeWidth}, but does <i>not</i> include the effect,
+ * clip, or any transforms. For resizable classes (Regions and Controls)
+ * layoutBounds will always map to {@code 0,0 width x height}.
+ *
  * <p>
  * The image shows a node without any transformation and its {@code boundsInLocal}:
  * <p>
- * <img src="doc-files/boundsLocal.png" alt="A sine wave shape enclosed by an axis-aligned
- * rectangular bounds">
+ * <img src="doc-files/boundsLocal.png" alt="A sine wave shape enclosed by
+ * an axis-aligned rectangular bounds">
  * </p>
  * If we rotate the image by 20 degrees we get following result:
  * <p>
- * <img src="doc-files/boundsParent.png" alt="An axis-aligned rectangular bounds that encloses the
- * shape rotated by 20 degrees">
+ * <img src="doc-files/boundsParent.png" alt="An axis-aligned rectangular
+ * bounds that encloses the shape rotated by 20 degrees">
  * </p>
- * The red rectangle represents {@code boundsInParent} in the coordinate space of the Node's parent.
- * The {@code boundsInLocal} stays the same as in the first image, the green rectangle in this image
- * represents {@code boundsInLocal} in the coordinate space of the Node.
+ * The red rectangle represents {@code boundsInParent} in the
+ * coordinate space of the Node's parent. The {@code boundsInLocal} stays the same
+ * as in the first image, the green rectangle in this image represents {@code boundsInLocal}
+ * in the coordinate space of the Node.
+ *
  * <p>
- * The images show a filled and stroked rectangle and their bounds. The first rectangle
- * {@code [x:10.0 y:10.0 width:100.0 height:100.0 strokeWidth:0]} has the following bounds bounds:
- * {@code [x:10.0 y:10.0 width:100.0 height:100.0]}. The second rectangle
- * {@code [x:10.0 y:10.0 width:100.0 height:100.0 strokeWidth:5]} has the following bounds:
- * {@code [x:7.5 y:7.5 width:105 height:105]} (the stroke is centered by default, so only half of it
- * is outside of the original bounds; it is also possible to create inside or outside stroke). Since
- * neither of the rectangles has any transformation applied, {@code boundsInParent} and
- * {@code boundsInLocal} are the same.
+ * The images show a filled and stroked rectangle and their bounds. The
+ * first rectangle {@code [x:10.0 y:10.0 width:100.0 height:100.0 strokeWidth:0]}
+ * has the following bounds bounds: {@code [x:10.0 y:10.0 width:100.0 height:100.0]}.
+ *
+ * The second rectangle {@code [x:10.0 y:10.0 width:100.0 height:100.0 strokeWidth:5]}
+ * has the following bounds: {@code [x:7.5 y:7.5 width:105 height:105]}
+ * (the stroke is centered by default, so only half of it is outside
+ * of the original bounds; it is also possible to create inside or outside
+ * stroke).
+ *
+ * Since neither of the rectangles has any transformation applied,
+ * {@code boundsInParent} and {@code boundsInLocal} are the same.
  * </p>
  * <p>
- * <img src="doc-files/bounds.png" alt="The rectangles are enclosed by their respective bounds">
+ * <img src="doc-files/bounds.png" alt="The rectangles are enclosed by their
+ * respective bounds">
  * </p>
+ *
  * <h2><a id="CSS">CSS</a></h2>
  * <p>
- * The {@code Node} class contains {@code id}, {@code styleClass}, and {@code style} variables that
- * are used in styling this node from CSS. The {@code id} and {@code styleClass} variables are used
- * in CSS style sheets to identify nodes to which styles should be applied. The {@code style}
- * variable contains style properties and values that are applied directly to this node.
+ * The {@code Node} class contains {@code id}, {@code styleClass}, and
+ * {@code style} variables that are used in styling this node from
+ * CSS. The {@code id} and {@code styleClass} variables are used in
+ * CSS style sheets to identify nodes to which styles should be
+ * applied. The {@code style} variable contains style properties and
+ * values that are applied directly to this node.
  * <p>
- * For further information about CSS and how to apply CSS styles to nodes, see the
- * <a href="doc-files/cssref.html">CSS Reference Guide</a>.
+ * For further information about CSS and how to apply CSS styles
+ * to nodes, see the <a href="doc-files/cssref.html">CSS Reference
+ * Guide</a>.
  *
  * @since JavaFX 2.0
  */
@@ -368,8 +430,8 @@ import javafx.util.Callback;
 public abstract class Node implements EventTarget, Styleable {
 
     /*
-     * Store the singleton instance of the NodeHelper subclass corresponding to the subclass of this
-     * instance of Node
+     * Store the singleton instance of the NodeHelper subclass corresponding
+     * to the subclass of this instance of Node
      */
     private NodeHelper nodeHelper = null;
 
@@ -578,28 +640,62 @@ public abstract class Node implements EventTarget, Styleable {
             public void requestFocusVisible(Node node) {
                 node.requestFocusVisible();
             }
+
+            @Override
+            public StyleableProperty<TransitionDefinition[]> getTransitionProperty(Node node) {
+                if (node.transitions == null) {
+                    node.transitions = node.new TransitionDefinitionCollection();
+                }
+
+                return node.transitions;
+            }
+
+            @Override
+            public TransitionDefinition findTransitionDefinition(Node node, CssMetaData<? extends Styleable, ?> metadata) {
+                return node.transitions == null ? null : node.transitions.find(metadata);
+            }
+
+            @Override
+            public void addTransitionTimer(Node node, TransitionTimer timer) {
+                node.addTransitionTimer(timer);
+            }
+
+            @Override
+            public void removeTransitionTimer(Node node, TransitionTimer timer) {
+                node.removeTransitionTimer(timer);
+            }
+
+            @Override
+            public TransitionTimer findTransitionTimer(Node node, Property<?> property) {
+                return node.findTransitionTimer(property);
+            }
         });
     }
 
     /*
-     * ************************************************************************ * Methods and state
-     * for managing the dirty bits of a Node. The dirty * bits are flags used to keep track of what
-     * things are dirty on the * node and therefore need processing on the next pulse. Since the
-     * pulse * happens asynchronously to the change that made the node dirty (for * performance
-     * reasons), we need to keep track of what things have * changed. * *
+     * ************************************************************************
+     * *
+     * Methods and state for managing the dirty bits of a Node. The dirty *
+     * bits are flags used to keep track of what things are dirty on the *
+     * node and therefore need processing on the next pulse. Since the pulse *
+     * happens asynchronously to the change that made the node dirty (for *
+     * performance reasons), we need to keep track of what things have *
+     * changed. *
+     * *
      *************************************************************************/
 
     /**
-     * Set of dirty bits that are set when state is invalidated and cleared by the updateState
-     * method, which is called from the synchronizer.
+     * Set of dirty bits that are set when state is invalidated and cleared by
+     * the updateState method, which is called from the synchronizer.
      * <p>
      * A node starts dirty.
      */
     private Set<DirtyBits> dirtyBits = EnumSet.allOf(DirtyBits.class);
 
     /**
-     * Mark the specified bit as dirty, and add this node to the scene's dirty list. Note: This
-     * method MUST only be called via its accessor method.
+     * Mark the specified bit as dirty, and add this node to the scene's dirty list.
+     *
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doMarkDirty(DirtyBits dirtyBit) {
         if (isDirtyEmpty()) {
@@ -648,15 +744,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************ * Methods for
-     * synchronizing state from this Node to its PG peer. This * should only *ever* be called during
-     * synchronization initialized as a * result of a pulse. Any attempt to synchronize at any other
-     * time may * cause rendering artifacts. * *
+     * ************************************************************************
+     * *
+     * Methods for synchronizing state from this Node to its PG peer. This *
+     * should only *ever* be called during synchronization initialized as a *
+     * result of a pulse. Any attempt to synchronize at any other time may *
+     * cause rendering artifacts. *
+     * *
      *************************************************************************/
 
     /**
-     * Called by the synchronizer to update the state and clear dirtybits of this node in the PG
-     * graph
+     * Called by the synchronizer to update the state and
+     * clear dirtybits of this node in the PG graph
      */
     final void syncPeer() {
         // Do not synchronize invisible nodes unless their visibility has changed
@@ -668,12 +767,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A temporary rect used for computing bounds by the various bounds variables. This bounds
-     * starts life as a RectBounds, but may be promoted to a BoxBounds if there is a 3D transform
-     * mixed into its computation. These two fields were held in a thread local, but were then
-     * pulled out of it so that we could compute bounds before holding the synchronization lock.
-     * These objects have to be per-instance so that we can pass the right data down to the PG side
-     * later during synchronization (rather than statics as they were before).
+     * A temporary rect used for computing bounds by the various bounds
+     * variables. This bounds starts life as a RectBounds, but may be promoted
+     * to a BoxBounds if there is a 3D transform mixed into its computation.
+     * These two fields were held in a thread local, but were then pulled
+     * out of it so that we could compute bounds before holding the
+     * synchronization lock. These objects have to be per-instance so
+     * that we can pass the right data down to the PG side later during
+     * synchronization (rather than statics as they were before).
      */
     private BaseBounds _geomBounds = new RectBounds(0, 0, -1, -1);
 
@@ -727,9 +828,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * This function is called during synchronization to update the state of the NG Node from the FX
-     * Node. Subclasses of Node should override this method and must call
-     * NodeHelper.updatePeer(this) Note: This method MUST only be called via its accessor method.
+     * This function is called during synchronization to update the state of the
+     * NG Node from the FX Node. Subclasses of Node should override this method
+     * and must call NodeHelper.updatePeer(this)
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doUpdatePeer() {
         final NGNode peer = getPeer();
@@ -805,7 +907,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * *********************************************************************** * * *
+     * ***********************************************************************
+     * *
+     * *
+     * *
      *************************************************************************/
 
     private static final Object USER_DATA_KEY = new Object();
@@ -820,10 +925,11 @@ public abstract class Node implements EventTarget, Styleable {
      * @return an observable map of properties on this node for use primarily by application
      *         developers
      * @apiNote Layout managers use this map as well to specify layout constraints on the node, such
-     *          as {@code HBox#setHgrow}, so the developer should be mindful of clearing the map or
-     *          overriding its values. These entries are not removed automatically if the node is
-     *          removed from the layout manager, so unused entries can exist throughout the life of
-     *          the node.
+     *          as {@code HBox#setHgrow}, so the
+     *          developer should be mindful of clearing the map or overriding its values. These
+     *          entries are not removed automatically
+     *          if the node is removed from the layout manager, so unused entries can exist
+     *          throughout the life of the node.
      */
     public final ObservableMap<Object, Object> getProperties() {
         if (properties == null) {
@@ -842,9 +948,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Convenience method for setting a single Object property that can be retrieved at a later
-     * date. This is functionally equivalent to calling the getProperties().put(Object key, Object
-     * value) method. This can later be retrieved by calling {@link Node#getUserData()}.
+     * Convenience method for setting a single Object property that can be
+     * retrieved at a later date. This is functionally equivalent to calling
+     * the getProperties().put(Object key, Object value) method. This can later
+     * be retrieved by calling {@link Node#getUserData()}.
      *
      * @param value The value to be stored - this can later be retrieved by calling
      *            {@link Node#getUserData()}.
@@ -854,23 +961,25 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns a previously set Object property, or null if no such property has been set using the
-     * {@link Node#setUserData(java.lang.Object)} method.
+     * Returns a previously set Object property, or null if no such property
+     * has been set using the {@link Node#setUserData(java.lang.Object)} method.
      *
-     * @return The Object that was previously set, or null if no property has been set or if null
-     *         was set.
+     * @return The Object that was previously set, or null if no property
+     *         has been set or if null was set.
      */
     public Object getUserData() {
         return getProperties().get(USER_DATA_KEY);
     }
 
     /*
-     * ************************************************************************ * *
+     * ************************************************************************
+     * *
+     * *
      *************************************************************************/
 
     /**
-     * The parent of this {@code Node}. If this {@code Node} has not been added to a scene graph,
-     * then parent will be null.
+     * The parent of this {@code Node}. If this {@code Node} has not been added
+     * to a scene graph, then parent will be null.
      *
      * @defaultValue null
      */
@@ -953,8 +1062,8 @@ public abstract class Node implements EventTarget, Styleable {
     private SubScene subScene = null;
 
     /**
-     * The {@link Scene} that this {@code Node} is part of. If the Node is not part of a scene, then
-     * this variable will be null.
+     * The {@link Scene} that this {@code Node} is part of. If the Node is not
+     * part of a scene, then this variable will be null.
      *
      * @defaultValue null
      */
@@ -974,11 +1083,15 @@ public abstract class Node implements EventTarget, Styleable {
         @Override
         protected void fireValueChangedEvent() {
             /*
-             * Note: This method has been intentionally made into a no-op. In order to override the
-             * default set behavior. By default calling set(...) on a different scene will trigger:
-             * - invalidated(); - fireValueChangedEvent(); Both of the above are no-ops, but are
-             * handled manually via - Node.this.setScenes(...) - Node.this.invalidatedScenes(...) -
-             * forceValueChangedEvent()
+             * Note: This method has been intentionally made into a no-op. In
+             * order to override the default set behavior. By default calling
+             * set(...) on a different scene will trigger:
+             * - invalidated();
+             * - fireValueChangedEvent();
+             * Both of the above are no-ops, but are handled manually via
+             * - Node.this.setScenes(...)
+             * - Node.this.invalidatedScenes(...)
+             * - forceValueChangedEvent()
              */
         }
 
@@ -996,6 +1109,9 @@ public abstract class Node implements EventTarget, Styleable {
             getClip().setScenes(newScene, newSubScene);
         }
         if (sceneChanged) {
+            if (newScene == null) {
+                completeTransitionTimers();
+            }
             updateCanReceiveFocus();
             if (isFocusTraversable()) {
                 if (newScene != null) {
@@ -1013,11 +1129,12 @@ public abstract class Node implements EventTarget, Styleable {
             // Note: no need to remove from scene's dirty list
             // Scene's is checking if the node's scene is correct
             /*
-             * TODO: looks like an existing bug when a node is moved from one location to another,
-             * setScenes will be called twice by Parent.VetoableListDecorator onProposedChange and
-             * onChanged respectively. Removing the node and setting setScense(null,null) then
-             * adding it back to potentially the same scene. Causing the same node to being added
-             * twice to the same scene.
+             * TODO: looks like an existing bug when a node is moved from one
+             * location to another, setScenes will be called twice by
+             * Parent.VetoableListDecorator onProposedChange and onChanged
+             * respectively. Removing the node and setting setScense(null,null)
+             * then adding it back to potentially the same scene. Causing the
+             * same node to being added twice to the same scene.
              */
             addToSceneDirtyList();
         }
@@ -1039,23 +1156,23 @@ public abstract class Node implements EventTarget, Styleable {
         }
 
         /*
-         * Dispose the accessible peer, if any. If AT ever needs this node again a new accessible
-         * peer is created.
+         * Dispose the accessible peer, if any. If AT ever needs this node again
+         * a new accessible peer is created.
          */
         if (accessible != null) {
             /*
              * Generally accessibility does not retain any state, therefore deleting objects
-             * generally does not cause problems (AT just asks everything back). The exception to
-             * this rule is when the object sends a notifications to the AT, in which case it is
-             * expected to be around to answer request for the new values. It is possible that a
-             * object is reparented (within the scene) in the middle of this process. For example,
-             * when a tree item is expanded, the notification is sent to the AT by the cell. But
-             * when the TreeView relayouts the cell can be reparented before AT can query the
-             * relevant information about the expand event. If the accessible was disposed, AT can't
-             * properly report the event. The fix is to defer the disposal of the accessible to the
-             * next pulse. If at that time the node is placed back to the scene, then the accessible
-             * is hooked to Node and AT requests are processed. Otherwise the accessible is
-             * disposed.
+             * generally does not cause problems (AT just asks everything back).
+             * The exception to this rule is when the object sends a notifications to the AT,
+             * in which case it is expected to be around to answer request for the new values.
+             * It is possible that a object is reparented (within the scene) in the middle of
+             * this process. For example, when a tree item is expanded, the notification is
+             * sent to the AT by the cell. But when the TreeView relayouts the cell can be
+             * reparented before AT can query the relevant information about the expand event.
+             * If the accessible was disposed, AT can't properly report the event.
+             * The fix is to defer the disposal of the accessible to the next pulse.
+             * If at that time the node is placed back to the scene, then the accessible is hooked
+             * to Node and AT requests are processed. Otherwise the accessible is disposed.
              */
             if (oldScene != null && oldScene != newScene && newScene == null) {
                 // Strictly speaking we need some type of accessible.thaw() at this point.
@@ -1064,8 +1181,8 @@ public abstract class Node implements EventTarget, Styleable {
                 accessible.dispose();
             }
             /*
-             * Always set to null to ensure this accessible is never on more than one Scene#accMap
-             * at the same time (At lest not with the same accessible).
+             * Always set to null to ensure this accessible is never on more than one
+             * Scene#accMap at the same time (At lest not with the same accessible).
              */
             accessible = null;
         }
@@ -1104,14 +1221,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The id of this {@code Node}. This simple string identifier is useful for finding a specific
-     * Node within the scene graph. While the id of a Node should be unique within the scene graph,
-     * this uniqueness is not enforced. This is analogous to the "id" attribute on an HTML element
+     * The id of this {@code Node}. This simple string identifier is useful for
+     * finding a specific Node within the scene graph. While the id of a Node
+     * should be unique within the scene graph, this uniqueness is not enforced.
+     * This is analogous to the "id" attribute on an HTML element
      * (<a href="http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier">CSS ID
      * Specification</a>).
      * <p>
-     * For example, if a Node is given the id of "myId", then the lookup method can be used to find
-     * this node as follows: <code>scene.lookup("#myId");</code>.
+     * For example, if a Node is given the id of "myId", then the lookup method can
+     * be used to find this node as follows: <code>scene.lookup("#myId");</code>.
      * </p>
      *
      * @defaultValue null
@@ -1125,14 +1243,15 @@ public abstract class Node implements EventTarget, Styleable {
     // TODO: this is copied from the property in order to add the @return statement.
     // We should have a better, general solution without the need to copy it.
     /**
-     * The id of this {@code Node}. This simple string identifier is useful for finding a specific
-     * Node within the scene graph. While the id of a Node should be unique within the scene graph,
-     * this uniqueness is not enforced. This is analogous to the "id" attribute on an HTML element
+     * The id of this {@code Node}. This simple string identifier is useful for
+     * finding a specific Node within the scene graph. While the id of a Node
+     * should be unique within the scene graph, this uniqueness is not enforced.
+     * This is analogous to the "id" attribute on an HTML element
      * (<a href="http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier">CSS ID
      * Specification</a>).
      *
-     * @return the id assigned to this {@code Node} using the {@code setId} method or {@code null},
-     *         if no id has been assigned.
+     * @return the id assigned to this {@code Node} using the {@code setId}
+     *         method or {@code null}, if no id has been assigned.
      * @defaultValue null
      * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>
      */
@@ -1168,9 +1287,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A list of String identifiers which can be used to logically group Nodes, specifically for an
-     * external style engine. This variable is analogous to the "class" attribute on an HTML element
-     * and, as such, each element of the list is a style class to which this Node belongs.
+     * A list of String identifiers which can be used to logically group
+     * Nodes, specifically for an external style engine. This variable is
+     * analogous to the "class" attribute on an HTML element and, as such,
+     * each element of the list is a style class to which this Node belongs.
      *
      * @see <a href="http://www.w3.org/TR/css3-selectors/#class-html">CSS3 class selectors</a>
      * @defaultValue null
@@ -1206,23 +1326,25 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A string representation of the CSS style associated with this specific {@code Node}. This is
-     * analogous to the "style" attribute of an HTML element. Note that, like the HTML style
-     * attribute, this variable contains style properties and values and not the selector portion of
-     * a style rule.
+     * A string representation of the CSS style associated with this
+     * specific {@code Node}. This is analogous to the "style" attribute of an
+     * HTML element. Note that, like the HTML style attribute, this
+     * variable contains style properties and values and not the
+     * selector portion of a style rule.
      * 
      * @defaultValue empty string
      */
     private StringProperty style;
 
     /**
-     * A string representation of the CSS style associated with this specific {@code Node}. This is
-     * analogous to the "style" attribute of an HTML element. Note that, like the HTML style
-     * attribute, this variable contains style properties and values and not the selector portion of
-     * a style rule.
+     * A string representation of the CSS style associated with this
+     * specific {@code Node}. This is analogous to the "style" attribute of an
+     * HTML element. Note that, like the HTML style attribute, this
+     * variable contains style properties and values and not the
+     * selector portion of a style rule.
      * 
-     * @param value The inline CSS style to use for this {@code Node}. {@code null} is implicitly
-     *            converted to an empty String.
+     * @param value The inline CSS style to use for this {@code Node}.
+     *            {@code null} is implicitly converted to an empty String.
      * @defaultValue empty string
      * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>
      */
@@ -1232,14 +1354,16 @@ public abstract class Node implements EventTarget, Styleable {
 
     // TODO: javadoc copied from property for the sole purpose of providing a return tag
     /**
-     * A string representation of the CSS style associated with this specific {@code Node}. This is
-     * analogous to the "style" attribute of an HTML element. Note that, like the HTML style
-     * attribute, this variable contains style properties and values and not the selector portion of
-     * a style rule.
+     * A string representation of the CSS style associated with this
+     * specific {@code Node}. This is analogous to the "style" attribute of an
+     * HTML element. Note that, like the HTML style attribute, this
+     * variable contains style properties and values and not the
+     * selector portion of a style rule.
      * 
      * @defaultValue empty string
-     * @return The inline CSS style associated with this {@code Node}. If this {@code Node} does not
-     *         have an inline style, an empty String is returned.
+     * @return The inline CSS style associated with this {@code Node}.
+     *         If this {@code Node} does not have an inline style,
+     *         an empty String is returned.
      * @see <a href="doc-files/cssref.html">CSS Reference Guide</a>
      */
     @Override
@@ -1281,10 +1405,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Specifies whether this {@code Node} and any subnodes should be rendered as part of the scene
-     * graph. A node may be visible and yet not be shown in the rendered scene if, for instance, it
-     * is off the screen or obscured by another Node. Invisible nodes never receive mouse events or
-     * keyboard focus and never maintain keyboard focus when they become invisible.
+     * Specifies whether this {@code Node} and any subnodes should be rendered
+     * as part of the scene graph. A node may be visible and yet not be shown
+     * in the rendered scene if, for instance, it is off the screen or obscured
+     * by another Node. Invisible nodes never receive mouse events or
+     * keyboard focus and never maintain keyboard focus when they become
+     * invisible.
      *
      * @defaultValue true
      */
@@ -1347,9 +1473,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the mouse cursor for this {@code Node} and subnodes. If null, then the cursor of the
-     * first parent node with a non-null cursor will be used. If no Node in the scene graph defines
-     * a cursor, then the cursor of the {@code Scene} will be used.
+     * Defines the mouse cursor for this {@code Node} and subnodes. If null,
+     * then the cursor of the first parent node with a non-null cursor will be
+     * used. If no Node in the scene graph defines a cursor, then the cursor
+     * of the {@code Scene} will be used.
      *
      * @return the mouse cursor for this {@code Node} and subnodes
      * @defaultValue null
@@ -1359,26 +1486,31 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Specifies how opaque (that is, solid) the {@code Node} appears. A Node with 0% opacity is
-     * fully translucent. That is, while it is still {@link #visibleProperty visible} and rendered,
-     * you generally won't be able to see it. The exception to this rule is when the {@code Node} is
-     * combined with a blending mode and blend effect in which case a translucent Node may still
-     * have an impact in rendering. An opacity of 50% will render the node as being 50% transparent.
+     * Specifies how opaque (that is, solid) the {@code Node} appears. A Node
+     * with 0% opacity is fully translucent. That is, while it is still
+     * {@link #visibleProperty visible} and rendered, you generally won't be able to see it. The
+     * exception to this rule is when the {@code Node} is combined with a
+     * blending mode and blend effect in which case a translucent Node may still
+     * have an impact in rendering. An opacity of 50% will render the node as
+     * being 50% transparent.
      * <p>
-     * A {@link #visibleProperty visible} node with any opacity setting still receives mouse events
-     * and can receive keyboard focus. For example, if you want to have a large invisible rectangle
-     * overlay all {@code Node}s in the scene graph in order to intercept mouse events but not be
-     * visible to the user, you could create a large {@code Rectangle} that had an opacity of 0%.
+     * A {@link #visibleProperty visible} node with any opacity setting still receives mouse
+     * events and can receive keyboard focus. For example, if you want to have
+     * a large invisible rectangle overlay all {@code Node}s in the scene graph
+     * in order to intercept mouse events but not be visible to the user, you could
+     * create a large {@code Rectangle} that had an opacity of 0%.
      * <p>
-     * Opacity is specified as a value between 0 and 1. Values less than 0 are treated as 0, values
-     * greater than 1 are treated as 1.
+     * Opacity is specified as a value between 0 and 1. Values less than 0 are
+     * treated as 0, values greater than 1 are treated as 1.
      * <p>
      * On some platforms ImageView might not support opacity variable.
+     *
      * <p>
-     * There is a known limitation of mixing opacity &lt; 1.0 with a 3D Transform. Opacity/Blending
-     * is essentially a 2D image operation. The result of an opacity &lt; 1.0 set on a {@link Group}
-     * node with 3D transformed children will cause its children to be rendered in order without
-     * Z-buffering applied between those children.
+     * There is a known limitation of mixing opacity &lt; 1.0 with a 3D Transform.
+     * Opacity/Blending is essentially a 2D image operation. The result of
+     * an opacity &lt; 1.0 set on a {@link Group} node with 3D transformed children
+     * will cause its children to be rendered in order without Z-buffering
+     * applied between those children.
      *
      * @defaultValue 1.0
      */
@@ -1421,12 +1553,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The {@link javafx.scene.effect.BlendMode} used to blend this individual node into the scene
-     * behind it. If this node is a {@code Group}, then all of the children will be composited
-     * individually into a temporary buffer using their own blend modes and then that temporary
-     * buffer will be composited into the scene using the specified blend mode. A value of
-     * {@code null} is treated as pass-through. This means no effect on a parent (such as a
-     * {@code Group}), and the equivalent of {@code SRC_OVER} for a single {@code Node}.
+     * The {@link javafx.scene.effect.BlendMode} used to blend this individual node
+     * into the scene behind it. If this node is a {@code Group}, then all of the
+     * children will be composited individually into a temporary buffer using their
+     * own blend modes and then that temporary buffer will be composited into the
+     * scene using the specified blend mode.
+     *
+     * A value of {@code null} is treated as pass-through. This means no effect on a
+     * parent (such as a {@code Group}), and the equivalent of {@code SRC_OVER} for a single
+     * {@code Node}.
      *
      * @defaultValue {@code null}
      */
@@ -1476,27 +1611,30 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Specifies a {@code Node} to use to define the clipping shape for this Node. This clipping
-     * Node is not a child of this {@code Node} in the scene graph sense. Rather, it is used to
-     * define the clip for this {@code Node}.
+     * Specifies a {@code Node} to use to define the clipping shape for this
+     * Node. This clipping Node is not a child of this {@code Node} in the scene
+     * graph sense. Rather, it is used to define the clip for this {@code Node}.
      * <p>
-     * For example, you can use an {@link javafx.scene.image.ImageView} Node as a mask to represent
-     * the Clip. Or you could use one of the geometric shape Nodes such as
-     * {@link javafx.scene.shape.Rectangle} or {@link javafx.scene.shape.Circle}. Or you could use a
+     * For example, you can use an {@link javafx.scene.image.ImageView} Node as
+     * a mask to represent the Clip. Or you could use one of the geometric shape
+     * Nodes such as {@link javafx.scene.shape.Rectangle} or
+     * {@link javafx.scene.shape.Circle}. Or you could use a
      * {@link javafx.scene.text.Text} node to represent the Clip.
      * <p>
-     * See the class documentation for {@link Node} for scene graph structure restrictions on
-     * setting the clip. If these restrictions are violated by a change to the clip variable, the
-     * change is ignored and the previous value of the clip variable is restored.
+     * See the class documentation for {@link Node} for scene graph structure
+     * restrictions on setting the clip. If these restrictions are violated by
+     * a change to the clip variable, the change is ignored and the
+     * previous value of the clip variable is restored.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#SHAPE_CLIP ConditionalFeature.SHAPE_CLIP} for
-     * more information.
+     * {@link javafx.application.ConditionalFeature#SHAPE_CLIP ConditionalFeature.SHAPE_CLIP}
+     * for more information.
      * <p>
-     * There is a known limitation of mixing Clip with a 3D Transform. Clipping is essentially a 2D
-     * image operation. The result of a Clip set on a {@link Group} node with 3D transformed
-     * children will cause its children to be rendered in order without Z-buffering applied between
-     * those children.
+     * There is a known limitation of mixing Clip with a 3D Transform.
+     * Clipping is essentially a 2D image operation. The result of
+     * a Clip set on a {@link Group} node with 3D transformed children
+     * will cause its children to be rendered in order without Z-buffering
+     * applied between those children.
      *
      * @return the the clipping shape for this {@code Node}
      * @defaultValue null
@@ -1514,18 +1652,22 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A performance hint to the system to indicate that this {@code Node} should be cached as a
-     * bitmap. Rendering a bitmap representation of a node will be faster than rendering primitives
-     * in many cases, especially in the case of primitives with effects applied (such as a blur).
-     * However, it also increases memory usage. This hint indicates whether that trade-off
-     * (increased memory usage for increased performance) is worthwhile. Also note that on some
-     * platforms such as GPU accelerated platforms there is little benefit to caching Nodes as
-     * bitmaps when blurs and other effects are used since they are very fast to render on the GPU.
-     * The {@link #cacheHintProperty} variable provides additional options for enabling more
-     * aggressive bitmap caching.
+     * A performance hint to the system to indicate that this {@code Node}
+     * should be cached as a bitmap. Rendering a bitmap representation of a node
+     * will be faster than rendering primitives in many cases, especially in the
+     * case of primitives with effects applied (such as a blur). However, it
+     * also increases memory usage. This hint indicates whether that trade-off
+     * (increased memory usage for increased performance) is worthwhile. Also
+     * note that on some platforms such as GPU accelerated platforms there is
+     * little benefit to caching Nodes as bitmaps when blurs and other effects
+     * are used since they are very fast to render on the GPU.
+     *
+     * The {@link #cacheHintProperty} variable provides additional options for enabling
+     * more aggressive bitmap caching.
+     *
      * <p>
-     * Caching may be disabled for any node that has a 3D transform on itself, any of its ancestors,
-     * or any of its descendants.
+     * Caching may be disabled for any node that has a 3D transform on itself,
+     * any of its ancestors, or any of its descendants.
      *
      * @return the hint to cache for this {@code Node}
      * @see #cacheHintProperty
@@ -1546,21 +1688,24 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Additional hint for controlling bitmap caching.
      * <p>
-     * Under certain circumstances, such as animating nodes that are very expensive to render, it is
-     * desirable to be able to perform transformations on the node without having to regenerate the
-     * cached bitmap. An option in such cases is to perform the transforms on the cached bitmap
-     * itself.
+     * Under certain circumstances, such as animating nodes that are very
+     * expensive to render, it is desirable to be able to perform
+     * transformations on the node without having to regenerate the cached
+     * bitmap. An option in such cases is to perform the transforms on the
+     * cached bitmap itself.
      * <p>
-     * This technique can provide a dramatic improvement to animation performance, though may also
-     * result in a reduction in visual quality. The {@code cacheHint} variable provides a hint to
-     * the system about how and when that trade-off (visual quality for animation performance) is
+     * This technique can provide a dramatic improvement to animation
+     * performance, though may also result in a reduction in visual quality.
+     * The {@code cacheHint} variable provides a hint to the system about how
+     * and when that trade-off (visual quality for animation performance) is
      * acceptable.
      * <p>
-     * It is possible to enable the cacheHint only at times when your node is animating. In this
-     * way, expensive nodes can appear on screen with full visual quality, yet still animate
-     * smoothly.
+     * It is possible to enable the cacheHint only at times when your node is
+     * animating. In this way, expensive nodes can appear on screen with full
+     * visual quality, yet still animate smoothly.
      * <p>
-     * Example: <pre>{@code
+     * Example:
+     * <pre>{@code
         expensiveNode.setCache(true);
         expensiveNode.setCacheHint(CacheHint.QUALITY);
         ...
@@ -1574,11 +1719,15 @@ public abstract class Node implements EventTarget, Styleable {
                 new KeyValue(expensiveNode.cacheHintProperty(), CacheHint.QUALITY)
             )
         ).play();
-     }</pre> Note that {@code cacheHint} is only a hint to the system. Depending on the details of
-     * the node or the transform, this hint may be ignored.
+     }</pre>
+     *
+     * Note that {@code cacheHint} is only a hint to the system. Depending on
+     * the details of the node or the transform, this hint may be ignored.
+     *
      * <p>
-     * If {@code Node.cache} is false, cacheHint is ignored. Caching may be disabled for any node
-     * that has a 3D transform on itself, any of its ancestors, or any of its descendants.
+     * If {@code Node.cache} is false, cacheHint is ignored.
+     * Caching may be disabled for any node that has a 3D transform on itself,
+     * any of its ancestors, or any of its descendants.
      *
      * @return the {@code CacheHint} for this {@code Node}
      * @see #cacheProperty
@@ -1600,13 +1749,15 @@ public abstract class Node implements EventTarget, Styleable {
      * Specifies an effect to apply to this {@code Node}.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#EFFECT ConditionalFeature.EFFECT} for more
-     * information.
+     * {@link javafx.application.ConditionalFeature#EFFECT ConditionalFeature.EFFECT}
+     * for more information.
+     *
      * <p>
-     * There is a known limitation of mixing Effect with a 3D Transform. Effect is essentially a 2D
-     * image operation. The result of an Effect set on a {@link Group} node with 3D transformed
-     * children will cause its children to be rendered in order without Z-buffering applied between
-     * those children.
+     * There is a known limitation of mixing Effect with a 3D Transform. Effect is
+     * essentially a 2D image operation. The result of an Effect set on
+     * a {@link Group} node with 3D transformed children will cause its children
+     * to be rendered in order without Z-buffering applied between those
+     * children.
      *
      * @return the effect for this {@code Node}
      * @defaultValue null
@@ -1624,24 +1775,30 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether depth testing is used when rendering this node. If the depthTest flag is
-     * {@code DepthTest.DISABLE}, then depth testing is disabled for this node. If the depthTest
-     * flag is {@code DepthTest.ENABLE}, then depth testing is enabled for this node. If the
-     * depthTest flag is {@code DepthTest.INHERIT}, then depth testing is enabled for this node if
-     * it is enabled for the parent node or the parent node is null.
+     * Indicates whether depth testing is used when rendering this node.
+     * If the depthTest flag is {@code DepthTest.DISABLE}, then depth testing
+     * is disabled for this node.
+     * If the depthTest flag is {@code DepthTest.ENABLE}, then depth testing
+     * is enabled for this node.
+     * If the depthTest flag is {@code DepthTest.INHERIT}, then depth testing
+     * is enabled for this node if it is enabled for the parent node or the
+     * parent node is null.
      * <p>
-     * The depthTest flag is only used when the depthBuffer flag for the {@link Scene} is true
-     * (meaning that the {@link Scene} has an associated depth buffer)
+     * The depthTest flag is only used when the depthBuffer flag for
+     * the {@link Scene} is true (meaning that the
+     * {@link Scene} has an associated depth buffer)
      * <p>
-     * Depth test comparison is only done among nodes with depthTest enabled. A node with depthTest
-     * disabled does not read, test, or write the depth buffer, that is to say its Z value will not
-     * be considered for depth testing with other nodes.
+     * Depth test comparison is only done among nodes with depthTest enabled.
+     * A node with depthTest disabled does not read, test, or write the depth buffer,
+     * that is to say its Z value will not be considered for depth testing
+     * with other nodes.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D} for more
-     * information.
+     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D}
+     * for more information.
      * <p>
-     * See the constructor in Scene with depthBuffer as one of its input arguments.
+     * See the constructor in Scene with depthBuffer as one of its input
+     * arguments.
      *
      * @return the depth test setting for this {@code Node}
      * @see javafx.scene.Scene
@@ -1652,10 +1809,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Recompute the derived depth test flag. This flag is true if the depthTest flag for this node
-     * is true and the depth test flag for each ancestor node is true. It is false otherwise.
-     * Equivalently, the derived depth flag is true if the depthTest flag for this node is true and
-     * the derivedDepthTest flag for its parent is true.
+     * Recompute the derived depth test flag. This flag is true
+     * if the depthTest flag for this node is true and the
+     * depth test flag for each ancestor node is true. It is false
+     * otherwise. Equivalently, the derived depth flag is true
+     * if the depthTest flag for this node is true and the derivedDepthTest
+     * flag for its parent is true.
      */
     void computeDerivedDepthTest() {
         boolean newDDT;
@@ -1697,12 +1856,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the individual disabled state of this {@code Node}. Setting {@code disable} to true
-     * will cause this {@code Node} and any subnodes to become disabled. This property should be
-     * used only to set the disabled state of a {@code Node}. For querying the disabled state of a
-     * {@code Node}, the {@link #disabledProperty disabled} property should instead be used, since
-     * it is possible that a {@code Node} was disabled as a result of an ancestor being disabled
-     * even if the individual {@code disable} state on this {@code Node} is {@code false}.
+     * Defines the individual disabled state of this {@code Node}. Setting
+     * {@code disable} to true will cause this {@code Node} and any subnodes to
+     * become disabled. This property should be used only to set the disabled
+     * state of a {@code Node}. For querying the disabled state of a
+     * {@code Node}, the {@link #disabledProperty disabled} property should instead be used,
+     * since it is possible that a {@code Node} was disabled as a result of an
+     * ancestor being disabled even if the individual {@code disable} state on
+     * this {@code Node} is {@code false}.
      *
      * @return the disabled state for this {@code Node}
      * @defaultValue false
@@ -1733,15 +1894,21 @@ public abstract class Node implements EventTarget, Styleable {
     // private ObjectProperty<InputMap<?>> inputMap;
 
     /*
-     * ************************************************************************ * *
+     * ************************************************************************
+     * *
+     * *
      *************************************************************************/
     /**
-     * Defines how the picking computation is done for this node when triggered by a
-     * {@code MouseEvent} or a {@code contains} function call. If {@code pickOnBounds} is
-     * {@code true}, then picking is computed by intersecting with the bounds of this node, else
-     * picking is computed by intersecting with the geometric shape of this node. The default value
-     * of this property is {@code false} unless overridden by a subclass. The default value is
-     * {@code true} for {@link javafx.scene.layout.Region}.
+     * Defines how the picking computation is done for this node when
+     * triggered by a {@code MouseEvent} or a {@code contains} function call.
+     *
+     * If {@code pickOnBounds} is {@code true}, then picking is computed by
+     * intersecting with the bounds of this node, else picking is computed
+     * by intersecting with the geometric shape of this node.
+     *
+     * The default value of this property is {@code false} unless
+     * overridden by a subclass. The default value is {@code true}
+     * for {@link javafx.scene.layout.Region}.
      *
      * @defaultValue false; true for {@code Region}
      */
@@ -1763,16 +1930,19 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether or not this {@code Node} is disabled. A {@code Node} will become disabled
-     * if {@link #disableProperty disable} is set to {@code true} on either itself or one of its
-     * ancestors in the scene graph.
+     * Indicates whether or not this {@code Node} is disabled. A {@code Node}
+     * will become disabled if {@link #disableProperty disable} is set to {@code true} on either
+     * itself or one of its ancestors in the scene graph.
      * <p>
-     * A disabled {@code Node} should render itself differently to indicate its disabled state to
-     * the user. Such disabled rendering is dependent on the implementation of the {@code Node}. The
-     * shape classes contained in {@code javafx.scene.shape} do not implement such rendering by
-     * default, therefore applications using shapes for handling input must implement appropriate
-     * disabled rendering themselves. The user-interface controls defined in
-     * {@code javafx.scene.control} will implement disabled-sensitive rendering, however.
+     * A disabled {@code Node} should render itself differently to indicate its
+     * disabled state to the user.
+     * Such disabled rendering is dependent on the implementation of the
+     * {@code Node}. The shape classes contained in {@code javafx.scene.shape}
+     * do not implement such rendering by default, therefore applications using
+     * shapes for handling input must implement appropriate disabled rendering
+     * themselves. The user-interface controls defined in
+     * {@code javafx.scene.control} will implement disabled-sensitive rendering,
+     * however.
      * <p>
      * A disabled {@code Node} does not receive mouse or key events.
      *
@@ -1833,24 +2003,25 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Finds this {@code Node}, or the first sub-node, based on the given CSS selector. If this node
-     * is a {@code Parent}, then this function will traverse down into the branch until it finds a
-     * match. If more than one sub-node matches the specified selector, this function returns the
-     * first of them.
+     * Finds this {@code Node}, or the first sub-node, based on the given CSS selector.
+     * If this node is a {@code Parent}, then this function will traverse down
+     * into the branch until it finds a match. If more than one sub-node matches the
+     * specified selector, this function returns the first of them.
      * <p>
      * If the lookup selector does not specify a pseudo class, the lookup will ignore pseudo class
-     * states; it will return the first matching node whether or not it contains pseudo classes.
+     * states;
+     * it will return the first matching node whether or not it contains pseudo classes.
      * <p>
-     * For example, if a Node is given the id of "myId", then the lookup method can be used to find
-     * this node as follows: {@code scene.lookup("#myId");}.
+     * For example, if a Node is given the id of "myId", then the lookup method can
+     * be used to find this node as follows: {@code scene.lookup("#myId");}.
      * <p>
      * For example, if two nodes, NodeA and NodeB, have the same style class "myStyle" and NodeA has
      * a pseudo state "myPseudo", then to find NodeA, the lookup method can be used as follows:
      * {@code scene.lookup(".myStyle:myPseudo");} or {@code scene.lookup(":myPseudo");}.
      *
      * @param selector The css selector of the node to find
-     * @return The first node, starting from this {@code Node}, which matches the CSS
-     *         {@code selector}, null if none is found.
+     * @return The first node, starting from this {@code Node}, which matches
+     *         the CSS {@code selector}, null if none is found.
      */
     public Node lookup(String selector) {
         if (selector == null) return null;
@@ -1859,26 +2030,27 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Finds all {@code Node}s, including this one and any children, which match the given CSS
-     * selector. If no matches are found, an empty unmodifiable set is returned. The set is
-     * explicitly unordered.
+     * Finds all {@code Node}s, including this one and any children, which match
+     * the given CSS selector. If no matches are found, an empty unmodifiable set is
+     * returned. The set is explicitly unordered.
      * <p>
      * If the lookupAll selector does not specify a pseudo class, the lookupAll will ignore pseudo
-     * class states; it will return all matching nodes whether or not the nodes contain pseudo
-     * classes.
+     * class states;
+     * it will return all matching nodes whether or not the nodes contain pseudo classes.
      * <p>
      * For example, if there are multiple nodes with same style class "myStyle", then the lookupAll
-     * method can be used to find all these nodes as follows: {@code scene.lookupAll(".myStyle");}.
+     * method can
+     * be used to find all these nodes as follows: {@code scene.lookupAll(".myStyle");}.
      * <p>
-     * For example, if multiple nodes have same style class "myStyle" and few nodes have a pseudo
-     * state "myPseudo", then to find all nodes with "myPseudo" state, the lookupAll method can be
-     * used as follows: {@code scene.lookupAll(".myStyle:myPseudo");} or
-     * {@code scene.lookupAll(":myPseudo");}.
+     * For example, if multiple nodes have same style class "myStyle" and few nodes have
+     * a pseudo state "myPseudo", then to find all nodes with "myPseudo" state, the lookupAll method
+     * can be used as follows:
+     * {@code scene.lookupAll(".myStyle:myPseudo");} or {@code scene.lookupAll(":myPseudo");}.
      *
      * @param selector The css selector of the nodes to find
-     * @return All nodes, starting from and including this {@code Node}, which match the CSS
-     *         {@code selector}. The returned set is always unordered and unmodifiable, and never
-     *         null.
+     * @return All nodes, starting from and including this {@code Node}, which match
+     *         the CSS {@code selector}. The returned set is always unordered and
+     *         unmodifiable, and never null.
      */
     public Set<Node> lookupAll(String selector) {
         final Selector s = Selector.createSelector(selector);
@@ -1889,8 +2061,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Used by Node and Parent for traversing the tree and adding all nodes which match the given
-     * selector.
+     * Used by Node and Parent for traversing the tree and adding all nodes which
+     * match the given selector.
      *
      * @param selector the css selector of the nodes to find
      * @param results the results
@@ -1908,10 +2080,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Moves this {@code Node} to the back of its sibling nodes in terms of z-order. This is
-     * accomplished by moving this {@code Node} to the first position in its parent's
-     * {@code content} ObservableList. This function has no effect if this {@code Node} is not part
-     * of a group.
+     * Moves this {@code Node} to the back of its sibling nodes in terms of
+     * z-order. This is accomplished by moving this {@code Node} to the
+     * first position in its parent's {@code content} ObservableList.
+     * This function has no effect if this {@code Node} is not part of a group.
      */
     public void toBack() {
         if (getParent() != null) {
@@ -1920,9 +2092,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Moves this {@code Node} to the front of its sibling nodes in terms of z-order. This is
-     * accomplished by moving this {@code Node} to the last position in its parent's {@code content}
-     * ObservableList. This function has no effect if this {@code Node} is not part of a group.
+     * Moves this {@code Node} to the front of its sibling nodes in terms of
+     * z-order. This is accomplished by moving this {@code Node} to the
+     * last position in its parent's {@code content} ObservableList.
+     * This function has no effect if this {@code Node} is not part of a group.
      */
     public void toFront() {
         if (getParent() != null) {
@@ -2043,42 +2216,60 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Takes a snapshot of this node and returns the rendered image when it is ready. CSS and layout
-     * processing will be done for the node, and any of its children, prior to rendering it. The
-     * entire destination image is cleared to the fill {@code Paint} specified by the
-     * SnapshotParameters. This node is then rendered to the image. If the viewport specified by the
-     * SnapshotParameters is null, the upper-left pixel of the {@code boundsInParent} of this node,
-     * after first applying the transform specified by the SnapshotParameters, is mapped to the
-     * upper-left pixel (0,0) in the image. If a non-null viewport is specified, the upper-left
-     * pixel of the viewport is mapped to upper-left pixel (0,0) in the image. In both cases, this
-     * mapping to (0,0) of the image is done with an integer translation. The portion of the node
-     * that is outside of the rendered image will be clipped by the image.
+     * Takes a snapshot of this node and returns the rendered image when
+     * it is ready.
+     * CSS and layout processing will be done for the node, and any of its
+     * children, prior to rendering it.
+     * The entire destination image is cleared to the fill {@code Paint}
+     * specified by the SnapshotParameters. This node is then rendered to
+     * the image.
+     * If the viewport specified by the SnapshotParameters is null, the
+     * upper-left pixel of the {@code boundsInParent} of this
+     * node, after first applying the transform specified by the
+     * SnapshotParameters,
+     * is mapped to the upper-left pixel (0,0) in the image.
+     * If a non-null viewport is specified,
+     * the upper-left pixel of the viewport is mapped to upper-left pixel
+     * (0,0) in the image.
+     * In both cases, this mapping to (0,0) of the image is done with an integer
+     * translation. The portion of the node that is outside of the rendered
+     * image will be clipped by the image.
+     *
      * <p>
-     * When taking a snapshot of a scene that is being animated, either explicitly by the
-     * application or implicitly (such as chart animation), the snapshot will be rendered based on
-     * the state of the scene graph at the moment the snapshot is taken and will not reflect any
-     * subsequent animation changes.
-     * </p>
-     * <p>
-     * NOTE: In order for CSS and layout to function correctly, the node must be part of a Scene
-     * (the Scene may be attached to a Stage, but need not be).
+     * When taking a snapshot of a scene that is being animated, either
+     * explicitly by the application or implicitly (such as chart animation),
+     * the snapshot will be rendered based on the state of the scene graph at
+     * the moment the snapshot is taken and will not reflect any subsequent
+     * animation changes.
      * </p>
      *
-     * @param params the snapshot parameters containing attributes that will control the rendering.
-     *            If the SnapshotParameters object is null, then the Scene's attributes will be used
-     *            if this node is part of a scene, or default attributes will be used if this node
-     *            is not part of a scene.
-     * @param image the writable image that will be used to hold the rendered node. It may be null
-     *            in which case a new WritableImage will be constructed. The new image is
-     *            constructed using integer width and height values that are derived either from the
-     *            transformed bounds of this Node or from the size of the viewport as specified in
-     *            the SnapShotParameters. These integer values are chosen such that the image will
-     *            wholly contain the bounds of this Node or the specified viewport. If the image is
-     *            non-null, the node will be rendered into the existing image. In this case, the
-     *            width and height of the image determine the area that is rendered instead of the
-     *            width and height of the bounds or viewport.
-     * @throws IllegalStateException if this method is called on a thread other than the JavaFX
-     *             Application Thread.
+     * <p>
+     * NOTE: In order for CSS and layout to function correctly, the node
+     * must be part of a Scene (the Scene may be attached to a Stage, but need
+     * not be).
+     * </p>
+     *
+     * @param params the snapshot parameters containing attributes that
+     *            will control the rendering. If the SnapshotParameters object is null,
+     *            then the Scene's attributes will be used if this node is part of a scene,
+     *            or default attributes will be used if this node is not part of a scene.
+     *
+     * @param image the writable image that will be used to hold the rendered node.
+     *            It may be null in which case a new WritableImage will be constructed.
+     *            The new image is constructed using integer width and
+     *            height values that are derived either from the transformed bounds of this
+     *            Node or from the size of the viewport as specified in the
+     *            SnapShotParameters. These integer values are chosen such that the image
+     *            will wholly contain the bounds of this Node or the specified viewport.
+     *            If the image is non-null, the node will be rendered into the
+     *            existing image.
+     *            In this case, the width and height of the image determine the area
+     *            that is rendered instead of the width and height of the bounds or
+     *            viewport.
+     *
+     * @throws IllegalStateException if this method is called on a thread
+     *             other than the JavaFX Application Thread.
+     *
      * @return the rendered image
      * @since JavaFX 2.2
      */
@@ -2099,53 +2290,75 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Takes a snapshot of this node at the next frame and calls the specified callback method when
-     * the image is ready. CSS and layout processing will be done for the node, and any of its
-     * children, prior to rendering it. The entire destination image is cleared to the fill
-     * {@code Paint} specified by the SnapshotParameters. This node is then rendered to the image.
-     * If the viewport specified by the SnapshotParameters is null, the upper-left pixel of the
-     * {@code boundsInParent} of this node, after first applying the transform specified by the
-     * SnapshotParameters, is mapped to the upper-left pixel (0,0) in the image. If a non-null
-     * viewport is specified, the upper-left pixel of the viewport is mapped to upper-left pixel
-     * (0,0) in the image. In both cases, this mapping to (0,0) of the image is done with an integer
-     * translation. The portion of the node that is outside of the rendered image will be clipped by
+     * Takes a snapshot of this node at the next frame and calls the
+     * specified callback method when the image is ready.
+     * CSS and layout processing will be done for the node, and any of its
+     * children, prior to rendering it.
+     * The entire destination image is cleared to the fill {@code Paint}
+     * specified by the SnapshotParameters. This node is then rendered to
      * the image.
+     * If the viewport specified by the SnapshotParameters is null, the
+     * upper-left pixel of the {@code boundsInParent} of this
+     * node, after first applying the transform specified by the
+     * SnapshotParameters,
+     * is mapped to the upper-left pixel (0,0) in the image.
+     * If a non-null viewport is specified,
+     * the upper-left pixel of the viewport is mapped to upper-left pixel
+     * (0,0) in the image.
+     * In both cases, this mapping to (0,0) of the image is done with an integer
+     * translation. The portion of the node that is outside of the rendered
+     * image will be clipped by the image.
+     *
      * <p>
-     * This is an asynchronous call, which means that other events or animation might be processed
-     * before the node is rendered. If any such events modify the node, or any of its children, that
-     * modification will be reflected in the rendered image (just like it will also be reflected in
-     * the frame rendered to the Stage, if this node is part of a live scene graph).
-     * </p>
-     * <p>
-     * When taking a snapshot of a node that is being animated, either explicitly by the application
-     * or implicitly (such as chart animation), the snapshot will be rendered based on the state of
-     * the scene graph at the moment the snapshot is taken and will not reflect any subsequent
-     * animation changes.
-     * </p>
-     * <p>
-     * NOTE: In order for CSS and layout to function correctly, the node must be part of a Scene
-     * (the Scene may be attached to a Stage, but need not be).
+     * This is an asynchronous call, which means that other
+     * events or animation might be processed before the node is rendered.
+     * If any such events modify the node, or any of its children, that
+     * modification will be reflected in the rendered image (just like it
+     * will also be reflected in the frame rendered to the Stage, if this node
+     * is part of a live scene graph).
      * </p>
      *
-     * @param callback a class whose call method will be called when the image is ready. The
-     *            SnapshotResult that is passed into the call method of the callback will contain
-     *            the rendered image, the source node that was rendered, and a copy of the
-     *            SnapshotParameters. The callback parameter must not be null.
-     * @param params the snapshot parameters containing attributes that will control the rendering.
-     *            If the SnapshotParameters object is null, then the Scene's attributes will be used
-     *            if this node is part of a scene, or default attributes will be used if this node
-     *            is not part of a scene.
-     * @param image the writable image that will be used to hold the rendered node. It may be null
-     *            in which case a new WritableImage will be constructed. The new image is
-     *            constructed using integer width and height values that are derived either from the
-     *            transformed bounds of this Node or from the size of the viewport as specified in
-     *            the SnapShotParameters. These integer values are chosen such that the image will
-     *            wholly contain the bounds of this Node or the specified viewport. If the image is
-     *            non-null, the node will be rendered into the existing image. In this case, the
-     *            width and height of the image determine the area that is rendered instead of the
-     *            width and height of the bounds or viewport.
-     * @throws IllegalStateException if this method is called on a thread other than the JavaFX
-     *             Application Thread.
+     * <p>
+     * When taking a snapshot of a node that is being animated, either
+     * explicitly by the application or implicitly (such as chart animation),
+     * the snapshot will be rendered based on the state of the scene graph at
+     * the moment the snapshot is taken and will not reflect any subsequent
+     * animation changes.
+     * </p>
+     *
+     * <p>
+     * NOTE: In order for CSS and layout to function correctly, the node
+     * must be part of a Scene (the Scene may be attached to a Stage, but need
+     * not be).
+     * </p>
+     *
+     * @param callback a class whose call method will be called when the image
+     *            is ready. The SnapshotResult that is passed into the call method of
+     *            the callback will contain the rendered image, the source node
+     *            that was rendered, and a copy of the SnapshotParameters.
+     *            The callback parameter must not be null.
+     *
+     * @param params the snapshot parameters containing attributes that
+     *            will control the rendering. If the SnapshotParameters object is null,
+     *            then the Scene's attributes will be used if this node is part of a scene,
+     *            or default attributes will be used if this node is not part of a scene.
+     *
+     * @param image the writable image that will be used to hold the rendered node.
+     *            It may be null in which case a new WritableImage will be constructed.
+     *            The new image is constructed using integer width and
+     *            height values that are derived either from the transformed bounds of this
+     *            Node or from the size of the viewport as specified in the
+     *            SnapShotParameters. These integer values are chosen such that the image
+     *            will wholly contain the bounds of this Node or the specified viewport.
+     *            If the image is non-null, the node will be rendered into the
+     *            existing image.
+     *            In this case, the width and height of the image determine the area
+     *            that is rendered instead of the width and height of the bounds or
+     *            viewport.
+     *
+     * @throws IllegalStateException if this method is called on a thread
+     *             other than the JavaFX Application Thread.
+     *
      * @throws NullPointerException if the callback parameter is null.
      * @since JavaFX 2.2
      */
@@ -2192,7 +2405,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************ * *
+     * ************************************************************************
+     * *
+     * *
      *************************************************************************/
 
     public final void setOnDragEntered(EventHandler<? super DragEvent> value) {
@@ -2204,9 +2419,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when drag gesture enters this {@code Node}.
+     * Defines a function to be called when drag gesture
+     * enters this {@code Node}.
      * 
-     * @return the event handler that is called when drag gesture enters this {@code Node}
+     * @return the event handler that is called when drag gesture enters this
+     *         {@code Node}
      */
     public final ObjectProperty<EventHandler<? super DragEvent>> onDragEnteredProperty() {
         return getEventHandlerProperties().onDragEnteredProperty();
@@ -2221,9 +2438,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when drag gesture exits this {@code Node}.
+     * Defines a function to be called when drag gesture
+     * exits this {@code Node}.
      * 
-     * @return the event handler that is called when drag gesture exits this {@code Node}
+     * @return the event handler that is called when drag gesture exits this
+     *         {@code Node}
      */
     public final ObjectProperty<EventHandler<? super DragEvent>> onDragExitedProperty() {
         return getEventHandlerProperties().onDragExitedProperty();
@@ -2238,10 +2457,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when drag gesture progresses within this {@code Node}.
+     * Defines a function to be called when drag gesture progresses within
+     * this {@code Node}.
      * 
-     * @return the event handler that is called when drag gesture progresses within this
-     *         {@code Node}
+     * @return the event handler that is called when drag gesture progresses
+     *         within this {@code Node}
      */
     public final ObjectProperty<EventHandler<? super DragEvent>> onDragOverProperty() {
         return getEventHandlerProperties().onDragOverProperty();
@@ -2279,12 +2499,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when the mouse button is released on this {@code Node} during
-     * drag and drop gesture. Transfer of data from the {@link DragEvent}'s
-     * {@link DragEvent#getDragboard() dragboard} should happen in this function.
+     * Defines a function to be called when the mouse button is released
+     * on this {@code Node} during drag and drop gesture. Transfer of data from
+     * the {@link DragEvent}'s {@link DragEvent#getDragboard() dragboard} should
+     * happen in this function.
      * 
-     * @return the event handler that is called when the mouse button is released on this
-     *         {@code Node}
+     * @return the event handler that is called when the mouse button is
+     *         released on this {@code Node}
      */
     public final ObjectProperty<EventHandler<? super DragEvent>> onDragDroppedProperty() {
         return getEventHandlerProperties().onDragDroppedProperty();
@@ -2299,34 +2520,40 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when this {@code Node} is a drag and drop gesture source
-     * after its data has been dropped on a drop target. The {@code transferMode} of the event shows
-     * what just happened at the drop target. If {@code transferMode} has the value {@code MOVE},
-     * then the source can clear out its data. Clearing the source's data gives the appropriate
-     * appearance to a user that the data has been moved by the drag and drop gesture. A
-     * {@code transferMode} that has the value {@code NONE} indicates that no data was transferred
-     * during the drag and drop gesture.
+     * Defines a function to be called when this {@code Node} is a
+     * drag and drop gesture source after its data has
+     * been dropped on a drop target. The {@code transferMode} of the
+     * event shows what just happened at the drop target.
+     * If {@code transferMode} has the value {@code MOVE}, then the source can
+     * clear out its data. Clearing the source's data gives the appropriate
+     * appearance to a user that the data has been moved by the drag and drop
+     * gesture. A {@code transferMode} that has the value {@code NONE}
+     * indicates that no data was transferred during the drag and drop gesture.
      * 
-     * @return the event handler that is called when this {@code Node} is a drag and drop gesture
-     *         source after its data has been dropped on a drop target
+     * @return the event handler that is called when this {@code Node} is a drag
+     *         and drop gesture source after its data has been dropped on a drop target
      */
     public final ObjectProperty<EventHandler<? super DragEvent>> onDragDoneProperty() {
         return getEventHandlerProperties().onDragDoneProperty();
     }
 
     /**
-     * Confirms a potential drag and drop gesture that is recognized over this {@code Node}. Can be
-     * called only from a DRAG_DETECTED event handler. The returned {@link Dragboard} is used to
-     * transfer data during the drag and drop gesture. Placing this {@code Node}'s data on the
-     * {@link Dragboard} also identifies this {@code Node} as the source of the drag and drop
-     * gesture. More detail about drag and drop gestures is described in the overivew of
-     * {@link DragEvent}.
+     * Confirms a potential drag and drop gesture that is recognized over this
+     * {@code Node}.
+     * Can be called only from a DRAG_DETECTED event handler. The returned
+     * {@link Dragboard} is used to transfer data during
+     * the drag and drop gesture. Placing this {@code Node}'s data on the
+     * {@link Dragboard} also identifies this {@code Node} as the source of
+     * the drag and drop gesture.
+     * More detail about drag and drop gestures is described in the overivew
+     * of {@link DragEvent}.
      *
      * @see DragEvent
      * @param transferModes The supported {@code TransferMode}(s) of this {@code Node}
      * @return A {@code Dragboard} to place this {@code Node}'s data on
-     * @throws IllegalStateException if drag and drop cannot be started at this moment (it's called
-     *             outside of {@code DRAG_DETECTED} event handling or this node is not in scene).
+     * @throws IllegalStateException if drag and drop cannot be started at this
+     *             moment (it's called outside of {@code DRAG_DETECTED} event handling or
+     *             this node is not in scene).
      */
     public Dragboard startDragAndDrop(TransferMode... transferModes) {
         if (getScene() != null) {
@@ -2337,15 +2564,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Starts a full press-drag-release gesture with this node as gesture source. This method can be
-     * called only from a {@code DRAG_DETECTED} mouse event handler. More detail about dragging
-     * gestures can be found in the overview of {@link MouseEvent} and {@link MouseDragEvent}.
+     * Starts a full press-drag-release gesture with this node as gesture
+     * source. This method can be called only from a {@code DRAG_DETECTED} mouse
+     * event handler. More detail about dragging gestures can be found
+     * in the overview of {@link MouseEvent} and {@link MouseDragEvent}.
      *
      * @see MouseEvent
      * @see MouseDragEvent
-     * @throws IllegalStateException if the full press-drag-release gesture cannot be started at
-     *             this moment (it's called outside of {@code DRAG_DETECTED} event handling or this
-     *             node is not in scene).
+     * @throws IllegalStateException if the full press-drag-release gesture
+     *             cannot be started at this moment (it's called outside of
+     *             {@code DRAG_DETECTED} event handling or this node is not in scene).
      * @since JavaFX 2.1
      */
     public void startFullDrag() {
@@ -2357,14 +2585,14 @@ public abstract class Node implements EventTarget, Styleable {
         throw new IllegalStateException("Cannot start full drag on node " + "that is not in scene");
     }
 
-    ////////////////////////////
+    // --------------------------
     // Private Implementation
-    ////////////////////////////
+    // --------------------------
 
     /**
-     * If this Node is being used as the clip of another Node, that other node is referred to as the
-     * clipParent. If the boundsInParent of this Node changes, it must update the clipParent's
-     * bounds as well.
+     * If this Node is being used as the clip of another Node, that other node
+     * is referred to as the clipParent. If the boundsInParent of this Node
+     * changes, it must update the clipParent's bounds as well.
      */
     private Node clipParent;
 
@@ -2384,9 +2612,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Tests whether creating a parent-child relationship between these nodes would cause a cycle.
-     * The parent relationship includes not only the "real" parent (child of Group) but also the
-     * clipParent.
+     * Tests whether creating a parent-child relationship between these
+     * nodes would cause a cycle. The parent relationship includes not only
+     * the "real" parent (child of Group) but also the clipParent.
      */
     boolean wouldCreateCycle(Node parent, Node child) {
         if (child != null && child.getClip() == null && (!(child instanceof Parent))) {
@@ -2436,8 +2664,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Initialization *
-     * * To Note limit the number of bounds computations and improve startup * performance. * *
+     * *************************************************************************
+     * *
+     * Initialization *
+     * *
+     * To Note limit the number of bounds computations and improve startup *
+     * performance. *
+     * *
      **************************************************************************/
 
     /**
@@ -2447,24 +2680,27 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Layout related
-     * APIs. * *
+     * *************************************************************************
+     * *
+     * Layout related APIs. *
+     * *
      **************************************************************************/
     /**
-     * Defines whether or not this node's layout will be managed by it's parent. If the node is
-     * managed, it's parent will factor the node's geometry into its own preferred size and
-     * {@link #layoutBoundsProperty layoutBounds} calculations and will lay it out during the
-     * scene's layout pass. If a managed node's layoutBounds changes, it will automatically trigger
-     * relayout up the scene-graph to the nearest layout root (which is typically the scene's root
-     * node).
+     * Defines whether or not this node's layout will be managed by it's parent.
+     * If the node is managed, it's parent will factor the node's geometry
+     * into its own preferred size and {@link #layoutBoundsProperty layoutBounds}
+     * calculations and will lay it
+     * out during the scene's layout pass. If a managed node's layoutBounds
+     * changes, it will automatically trigger relayout up the scene-graph
+     * to the nearest layout root (which is typically the scene's root node).
      * <p>
-     * If the node is unmanaged, its parent will ignore the child in both preferred size
-     * computations and layout. Changes in layoutBounds will not trigger relayout above it. If an
-     * unmanaged node is of type {@link javafx.scene.Parent Parent}, it will act as a "layout root",
-     * meaning that calls to {@link Parent#requestLayout()} beneath it will cause only the branch
-     * rooted by the node to be relayed out, thereby isolating layout changes to that root and
-     * below. It's the application's responsibility to set the size and position of an unmanaged
-     * node.
+     * If the node is unmanaged, its parent will ignore the child in both preferred
+     * size computations and layout. Changes in layoutBounds will not trigger
+     * relayout above it. If an unmanaged node is of type {@link javafx.scene.Parent Parent},
+     * it will act as a "layout root", meaning that calls to {@link Parent#requestLayout()}
+     * beneath it will cause only the branch rooted by the node to be relayed out,
+     * thereby isolating layout changes to that root and below. It's the application's
+     * responsibility to set the size and position of an unmanaged node.
      * <p>
      * By default all nodes are managed.
      * </p>
@@ -2472,6 +2708,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @see #isResizable()
      * @see #layoutBoundsProperty()
      * @see Parent#requestLayout()
+     *
      */
     private BooleanProperty managed;
 
@@ -2517,37 +2754,45 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Called whenever the "managed" flag has changed. This is only used by Parent as an
-     * optimization to keep track of whether a Parent node is a layout root or not.
+     * Called whenever the "managed" flag has changed. This is only
+     * used by Parent as an optimization to keep track of whether a
+     * Parent node is a layout root or not.
      */
     void notifyManagedChanged() {
     }
 
     /**
-     * Defines the x coordinate of the translation that is added to this {@code Node}'s transform
-     * for the purpose of layout. The value should be computed as the offset required to adjust the
-     * position of the node from its current {@link #layoutBoundsProperty() layoutBounds minX}
-     * position (which might not be 0) to the desired location.
+     * Defines the x coordinate of the translation that is added to this {@code Node}'s
+     * transform for the purpose of layout. The value should be computed as the
+     * offset required to adjust the position of the node from its current
+     * {@link #layoutBoundsProperty() layoutBounds minX} position (which might not be 0) to the
+     * desired location.
+     *
      * <p>
-     * For example, if {@code textnode} should be positioned at {@code finalX} <pre>{@code
+     * For example, if {@code textnode} should be positioned at {@code finalX}
+     * <pre>{@code
      *     textnode.setLayoutX(finalX - textnode.getLayoutBounds().getMinX());
      * }</pre>
      * <p>
-     * Failure to subtract {@code layoutBounds minX} may result in misplacement of the node. The
-     * {@link #relocate(double, double) relocate(x, y)} method will automatically do the correct
-     * computation and should generally be used over setting layoutX directly.
+     * Failure to subtract {@code layoutBounds minX} may result in misplacement
+     * of the node. The {@link #relocate(double, double) relocate(x, y)} method will automatically
+     * do the
+     * correct computation and should generally be used over setting layoutX directly.
      * <p>
      * The node's final translation will be computed as {@code layoutX} + {@link #translateXProperty
-     * translateX}, where {@code layoutX} establishes the node's stable position and
-     * {@code translateX} optionally makes dynamic adjustments to that position.
+     * translateX},
+     * where {@code layoutX} establishes the node's stable position
+     * and {@code translateX} optionally makes dynamic adjustments to that
+     * position.
      * <p>
-     * If the node is managed and has a {@link javafx.scene.layout.Region} as its parent, then the
-     * layout region will set {@code layoutX} according to its own layout policy. If the node is
-     * unmanaged or parented by a {@link Group}, then the application may set {@code layoutX}
-     * directly to position it.
+     * If the node is managed and has a {@link javafx.scene.layout.Region}
+     * as its parent, then the layout region will set {@code layoutX} according to its
+     * own layout policy. If the node is unmanaged or parented by a {@link Group},
+     * then the application may set {@code layoutX} directly to position it.
      *
      * @see #relocate(double, double)
      * @see #layoutBoundsProperty()
+     *
      */
     private DoubleProperty layoutX;
 
@@ -2596,27 +2841,33 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the y coordinate of the translation that is added to this {@code Node}'s transform
-     * for the purpose of layout. The value should be computed as the offset required to adjust the
-     * position of the node from its current {@link #layoutBoundsProperty() layoutBounds minY}
-     * position (which might not be 0) to the desired location.
+     * Defines the y coordinate of the translation that is added to this {@code Node}'s
+     * transform for the purpose of layout. The value should be computed as the
+     * offset required to adjust the position of the node from its current
+     * {@link #layoutBoundsProperty() layoutBounds minY} position (which might not be 0) to the
+     * desired location.
+     *
      * <p>
-     * For example, if {@code textnode} should be positioned at {@code finalY} <pre>{@code
+     * For example, if {@code textnode} should be positioned at {@code finalY}
+     * <pre>{@code
      *     textnode.setLayoutY(finalY - textnode.getLayoutBounds().getMinY());
      * }</pre>
      * <p>
-     * Failure to subtract {@code layoutBounds minY} may result in misplacement of the node. The
-     * {@link #relocate(double, double) relocate(x, y)} method will automatically do the correct
-     * computation and should generally be used over setting layoutY directly.
+     * Failure to subtract {@code layoutBounds minY} may result in misplacement
+     * of the node. The {@link #relocate(double, double) relocate(x, y)} method will automatically
+     * do the
+     * correct computation and should generally be used over setting layoutY directly.
      * <p>
      * The node's final translation will be computed as {@code layoutY} + {@link #translateYProperty
-     * translateY}, where {@code layoutY} establishes the node's stable position and
-     * {@code translateY} optionally makes dynamic adjustments to that position.
+     * translateY},
+     * where {@code layoutY} establishes the node's stable position
+     * and {@code translateY} optionally makes dynamic adjustments to that
+     * position.
      * <p>
-     * If the node is managed and has a {@link javafx.scene.layout.Region} as its parent, then the
-     * region will set {@code layoutY} according to its own layout policy. If the node is unmanaged
-     * or parented by a {@link Group}, then the application may set {@code layoutY} directly to
-     * position it.
+     * If the node is managed and has a {@link javafx.scene.layout.Region}
+     * as its parent, then the region will set {@code layoutY} according to its
+     * own layout policy. If the node is unmanaged or parented by a {@link Group},
+     * then the application may set {@code layoutY} directly to position it.
      *
      * @see #relocate(double, double)
      * @see #layoutBoundsProperty()
@@ -2669,11 +2920,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Sets the node's layoutX and layoutY translation properties in order to relocate this node to
-     * the x,y location in the parent.
+     * Sets the node's layoutX and layoutY translation properties in order to
+     * relocate this node to the x,y location in the parent.
      * <p>
-     * This method does not alter translateX or translateY, which if also set will be added to
-     * layoutX and layoutY, adjusting the final location by corresponding amounts.
+     * This method does not alter translateX or translateY, which if also set
+     * will be added to layoutX and layoutY, adjusting the final location by
+     * corresponding amounts.
      *
      * @param x the target x coordinate location
      * @param y the target y coordinate location
@@ -2689,17 +2941,20 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether this node is a type which can be resized by its parent. If this method
-     * returns true, then the parent will resize the node (ideally within its size range) by calling
-     * node.resize(width,height) during the layout pass. All Regions, Controls, and WebView are
-     * resizable classes which depend on their parents resizing them during layout once all sizing
+     * Indicates whether this node is a type which can be resized by its parent.
+     * If this method returns true, then the parent will resize the node (ideally
+     * within its size range) by calling node.resize(width,height) during the
+     * layout pass. All Regions, Controls, and WebView are resizable classes
+     * which depend on their parents resizing them during layout once all sizing
      * and CSS styling information has been applied.
      * <p>
-     * If this method returns false, then the parent cannot resize it during layout (resize() is a
-     * no-op) and it should return its layoutBounds for minimum, preferred, and maximum sizes.
-     * Group, Text, and all Shapes are not resizable and hence depend on the application to
-     * establish their sizing by setting appropriate properties (e.g. width/height for Rectangle,
-     * text on Text, and so on). Non-resizable nodes may still be relocated during layout.
+     * If this method returns false, then the parent cannot resize it during
+     * layout (resize() is a no-op) and it should return its layoutBounds for
+     * minimum, preferred, and maximum sizes. Group, Text, and all Shapes are not
+     * resizable and hence depend on the application to establish their sizing
+     * by setting appropriate properties (e.g. width/height for Rectangle,
+     * text on Text, and so on). Non-resizable nodes may still be relocated
+     * during layout.
      *
      * @see #getContentBias()
      * @see #minWidth(double)
@@ -2710,6 +2965,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @see #maxHeight(double)
      * @see #resize(double, double)
      * @see #getLayoutBounds()
+     *
      * @return whether or not this node type can be resized by its parent during layout
      */
     public boolean isResizable() {
@@ -2717,11 +2973,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the orientation of a node's resizing bias for layout purposes. If the node type has
-     * no bias, returns null. If the node is resizable and it's height depends on its width, returns
-     * HORIZONTAL, else if its width depends on its height, returns VERTICAL.
+     * Returns the orientation of a node's resizing bias for layout purposes.
+     * If the node type has no bias, returns null. If the node is resizable and
+     * it's height depends on its width, returns HORIZONTAL, else if its width
+     * depends on its height, returns VERTICAL.
      * <p>
-     * Resizable subclasses should override this method to return an appropriate value.
+     * Resizable subclasses should override this method to return an
+     * appropriate value.
      *
      * @see #isResizable()
      * @see #minWidth(double)
@@ -2730,6 +2988,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @see #prefHeight(double)
      * @see #maxWidth(double)
      * @see #maxHeight(double)
+     *
      * @return orientation of width/height dependency or null if there is none
      */
     public Orientation getContentBias() {
@@ -2737,80 +2996,91 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the node's minimum width for use in layout calculations. If the node is resizable,
-     * its parent should not resize its width any smaller than this value. If the node is not
-     * resizable, returns its layoutBounds width.
+     * Returns the node's minimum width for use in layout calculations.
+     * If the node is resizable, its parent should not resize its width any
+     * smaller than this value. If the node is not resizable, returns its
+     * layoutBounds width.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a vertical content-bias, then callers should pass in a height value that the minimum
-     * width should be based on. If the node has either a horizontal or null content-bias, then the
-     * caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a vertical content-bias, then callers
+     * should pass in a height value that the minimum width should be based on.
+     * If the node has either a horizontal or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a vertical content-bias should honor the height parameter whether -1 or
-     * a positive value. All other subclasses may ignore the height parameter (which will likely be
-     * -1).
+     * Node subclasses with a vertical content-bias should honor the height
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the height parameter (which will likely be -1).
      * <p>
-     * If Node's {@link #maxWidth(double)} is lower than this number, {@code minWidth} takes
-     * precedence. This means the Node should never be resized below {@code minWidth}.
+     * If Node's {@link #maxWidth(double)} is lower than this number,
+     * {@code minWidth} takes precedence. This means the Node should never be resized below
+     * {@code minWidth}.
      *
      * @see #isResizable()
      * @see #getContentBias()
+     *
      * @param height the height that should be used if minimum width depends on it
-     * @return the minimum width that the node should be resized to during layout. The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the minimum width that the node should be resized to during layout.
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double minWidth(double height) {
         return prefWidth(height);
     }
 
     /**
-     * Returns the node's minimum height for use in layout calculations. If the node is resizable,
-     * its parent should not resize its height any smaller than this value. If the node is not
-     * resizable, returns its layoutBounds height.
+     * Returns the node's minimum height for use in layout calculations.
+     * If the node is resizable, its parent should not resize its height any
+     * smaller than this value. If the node is not resizable, returns its
+     * layoutBounds height.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a horizontal content-bias, then callers should pass in a width value that the
-     * minimum height should be based on. If the node has either a vertical or null content-bias,
-     * then the caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a horizontal content-bias, then callers
+     * should pass in a width value that the minimum height should be based on.
+     * If the node has either a vertical or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a horizontal content-bias should honor the width parameter whether -1 or
-     * a positive value. All other subclasses may ignore the width parameter (which will likely be
-     * -1).
+     * Node subclasses with a horizontal content-bias should honor the width
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the width parameter (which will likely be -1).
      * <p>
-     * If Node's {@link #maxHeight(double)} is lower than this number, {@code minHeight} takes
-     * precedence. This means the Node should never be resized below {@code minHeight}.
+     * If Node's {@link #maxHeight(double)} is lower than this number,
+     * {@code minHeight} takes precedence. This means the Node should never be resized below
+     * {@code minHeight}.
      *
      * @see #isResizable()
      * @see #getContentBias()
+     *
      * @param width the width that should be used if minimum height depends on it
-     * @return the minimum height that the node should be resized to during layout The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the minimum height that the node should be resized to during layout
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double minHeight(double width) {
         return prefHeight(width);
     }
 
     /**
-     * Returns the node's preferred width for use in layout calculations. If the node is resizable,
-     * its parent should treat this value as the node's ideal width within its range. If the node is
-     * not resizable, just returns its layoutBounds width, which should be treated as the rigid
+     * Returns the node's preferred width for use in layout calculations.
+     * If the node is resizable, its parent should treat this value as the
+     * node's ideal width within its range. If the node is not resizable,
+     * just returns its layoutBounds width, which should be treated as the rigid
      * width of the node.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a vertical content-bias, then callers should pass in a height value that the
-     * preferred width should be based on. If the node has either a horizontal or null content-bias,
-     * then the caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a vertical content-bias, then callers
+     * should pass in a height value that the preferred width should be based on.
+     * If the node has either a horizontal or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a vertical content-bias should honor the height parameter whether -1 or
-     * a positive value. All other subclasses may ignore the height parameter (which will likely be
-     * -1).
+     * Node subclasses with a vertical content-bias should honor the height
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the height parameter (which will likely be -1).
      *
      * @see #isResizable()
      * @see #getContentBias()
      * @see #autosize()
+     *
      * @param height the height that should be used if preferred width depends on it
-     * @return the preferred width that the node should be resized to during layout The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the preferred width that the node should be resized to during layout
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double prefWidth(double height) {
         final double result = getLayoutBounds().getWidth();
@@ -2818,25 +3088,28 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the node's preferred height for use in layout calculations. If the node is resizable,
-     * its parent should treat this value as the node's ideal height within its range. If the node
-     * is not resizable, just returns its layoutBounds height, which should be treated as the rigid
+     * Returns the node's preferred height for use in layout calculations.
+     * If the node is resizable, its parent should treat this value as the
+     * node's ideal height within its range. If the node is not resizable,
+     * just returns its layoutBounds height, which should be treated as the rigid
      * height of the node.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a horizontal content-bias, then callers should pass in a width value that the
-     * preferred height should be based on. If the node has either a vertical or null content-bias,
-     * then the caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a horizontal content-bias, then callers
+     * should pass in a width value that the preferred height should be based on.
+     * If the node has either a vertical or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a horizontal content-bias should honor the height parameter whether -1
-     * or a positive value. All other subclasses may ignore the height parameter (which will likely
-     * be -1).
+     * Node subclasses with a horizontal content-bias should honor the height
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the height parameter (which will likely be -1).
      *
      * @see #getContentBias()
      * @see #autosize()
+     *
      * @param width the width that should be used if preferred height depends on it
-     * @return the preferred height that the node should be resized to during layout The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the preferred height that the node should be resized to during layout
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double prefHeight(double width) {
         final double result = getLayoutBounds().getHeight();
@@ -2844,77 +3117,83 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the node's maximum width for use in layout calculations. If the node is resizable,
-     * its parent should not resize its width any larger than this value. A value of
-     * Double.MAX_VALUE indicates the parent may expand the node's width beyond its preferred
-     * without limits.
+     * Returns the node's maximum width for use in layout calculations.
+     * If the node is resizable, its parent should not resize its width any
+     * larger than this value. A value of Double.MAX_VALUE indicates the
+     * parent may expand the node's width beyond its preferred without limits.
      * <p>
      * If the node is not resizable, returns its layoutBounds width.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a vertical content-bias, then callers should pass in a height value that the maximum
-     * width should be based on. If the node has either a horizontal or null content-bias, then the
-     * caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a vertical content-bias, then callers
+     * should pass in a height value that the maximum width should be based on.
+     * If the node has either a horizontal or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a vertical content-bias should honor the height parameter whether -1 or
-     * a positive value. All other subclasses may ignore the height parameter (which will likely be
-     * -1).
+     * Node subclasses with a vertical content-bias should honor the height
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the height parameter (which will likely be -1).
      * <p>
-     * If Node's {@link #minWidth(double)} is greater, it should take precedence over the
-     * {@code maxWidth}. This means the Node should never be resized below {@code minWidth}.
+     * If Node's {@link #minWidth(double)} is greater, it should take precedence
+     * over the {@code maxWidth}. This means the Node should never be resized below
+     * {@code minWidth}.
      *
      * @see #isResizable()
      * @see #getContentBias()
+     *
      * @param height the height that should be used if maximum width depends on it
-     * @return the maximum width that the node should be resized to during layout The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the maximum width that the node should be resized to during layout
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double maxWidth(double height) {
         return prefWidth(height);
     }
 
     /**
-     * Returns the node's maximum height for use in layout calculations. If the node is resizable,
-     * its parent should not resize its height any larger than this value. A value of
-     * Double.MAX_VALUE indicates the parent may expand the node's height beyond its preferred
-     * without limits.
+     * Returns the node's maximum height for use in layout calculations.
+     * If the node is resizable, its parent should not resize its height any
+     * larger than this value. A value of Double.MAX_VALUE indicates the
+     * parent may expand the node's height beyond its preferred without limits.
      * <p>
      * If the node is not resizable, returns its layoutBounds height.
      * <p>
-     * Layout code which calls this method should first check the content-bias of the node. If the
-     * node has a horizontal content-bias, then callers should pass in a width value that the
-     * maximum height should be based on. If the node has either a vertical or null content-bias,
-     * then the caller should pass in -1.
+     * Layout code which calls this method should first check the content-bias
+     * of the node. If the node has a horizontal content-bias, then callers
+     * should pass in a width value that the maximum height should be based on.
+     * If the node has either a vertical or null content-bias, then the caller
+     * should pass in -1.
      * <p>
-     * Node subclasses with a horizontal content-bias should honor the width parameter whether -1 or
-     * a positive value. All other subclasses may ignore the width parameter (which will likely be
-     * -1).
+     * Node subclasses with a horizontal content-bias should honor the width
+     * parameter whether -1 or a positive value. All other subclasses may ignore
+     * the width parameter (which will likely be -1).
      * <p>
-     * If Node's {@link #minHeight(double)} is greater, it should take precedence over the
-     * {@code maxHeight}. This means the Node should never be resized below {@code minHeight}.
+     * If Node's {@link #minHeight(double)} is greater, it should take precedence
+     * over the {@code maxHeight}. This means the Node should never be resized below
+     * {@code minHeight}.
      *
      * @see #isResizable()
      * @see #getContentBias()
+     *
      * @param width the width that should be used if maximum height depends on it
-     * @return the maximum height that the node should be resized to during layout The result will
-     *         never be NaN, nor will it ever be negative.
+     * @return the maximum height that the node should be resized to during layout
+     *         The result will never be NaN, nor will it ever be negative.
      */
     public double maxHeight(double width) {
         return prefHeight(width);
     }
 
     /**
-     * If the node is resizable, will set its layout bounds to the specified width and height. If
-     * the node is not resizable, this method is a no-op.
+     * If the node is resizable, will set its layout bounds to the specified
+     * width and height. If the node is not resizable, this method is a no-op.
      * <p>
-     * This method should generally only be called by parent nodes from their layoutChildren()
-     * methods. All Parent classes will automatically resize resizable children, so resizing done
-     * directly by the application will be overridden by the node's parent, unless the child is
-     * unmanaged.
+     * This method should generally only be called by parent nodes from their
+     * layoutChildren() methods. All Parent classes will automatically resize
+     * resizable children, so resizing done directly by the application will be
+     * overridden by the node's parent, unless the child is unmanaged.
      * <p>
-     * Parents are responsible for ensuring the width and height values fall within the resizable
-     * node's preferred range. The autosize() method may be used if the parent just needs to resize
-     * the node to its preferred size.
+     * Parents are responsible for ensuring the width and height values fall
+     * within the resizable node's preferred range. The autosize() method may
+     * be used if the parent just needs to resize the node to its preferred size.
      *
      * @see #isResizable()
      * @see #getContentBias()
@@ -2926,6 +3205,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @see #maxWidth(double)
      * @see #maxHeight(double)
      * @see #getLayoutBounds()
+     *
      * @param width the target layout bounds width
      * @param height the target layout bounds height
      */
@@ -2933,17 +3213,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If the node is resizable, will set its layout bounds to its current preferred width and
-     * height. If the node is not resizable, this method is a no-op.
+     * If the node is resizable, will set its layout bounds to its current preferred
+     * width and height. If the node is not resizable, this method is a no-op.
      * <p>
-     * This method automatically queries the node's content-bias and if it's horizontal, will pass
-     * in the node's preferred width to get the preferred height; if vertical, will pass in the
-     * node's preferred height to get the width, and if null, will compute the preferred
-     * width/height independently.
+     * This method automatically queries the node's content-bias and if it's
+     * horizontal, will pass in the node's preferred width to get the preferred
+     * height; if vertical, will pass in the node's preferred height to get the width,
+     * and if null, will compute the preferred width/height independently.
      * </p>
      *
      * @see #isResizable()
      * @see #getContentBias()
+     *
      */
     public final void autosize() {
         if (isResizable()) {
@@ -2971,20 +3252,22 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If the node is resizable, will set its layout bounds to the specified width and height. If
-     * the node is not resizable, the resize step is skipped.
+     * If the node is resizable, will set its layout bounds to the specified
+     * width and height. If the node is not resizable, the resize step is skipped.
      * <p>
-     * Once the node has been resized (if resizable) then sets the node's layoutX and layoutY
-     * translation properties in order to relocate it to x,y in the parent's coordinate space.
+     * Once the node has been resized (if resizable) then sets the node's layoutX
+     * and layoutY translation properties in order to relocate it to x,y in the
+     * parent's coordinate space.
      * <p>
-     * This method should generally only be called by parent nodes from their layoutChildren()
-     * methods. All Parent classes will automatically resize resizable children, so resizing done
-     * directly by the application will be overridden by the node's parent, unless the child is
-     * unmanaged.
+     * This method should generally only be called by parent nodes from their
+     * layoutChildren() methods. All Parent classes will automatically resize
+     * resizable children, so resizing done directly by the application will be
+     * overridden by the node's parent, unless the child is unmanaged.
      * <p>
-     * Parents are responsible for ensuring the width and height values fall within the resizable
-     * node's preferred range. The autosize() and relocate() methods may be used if the parent just
-     * needs to resize the node to its preferred size and reposition it.
+     * Parents are responsible for ensuring the width and height values fall
+     * within the resizable node's preferred range. The autosize() and relocate()
+     * methods may be used if the parent just needs to resize the node to its
+     * preferred size and reposition it.
      *
      * @see #isResizable()
      * @see #getContentBias()
@@ -2995,10 +3278,12 @@ public abstract class Node implements EventTarget, Styleable {
      * @see #prefHeight(double)
      * @see #maxWidth(double)
      * @see #maxHeight(double)
+     *
      * @param x the target x coordinate location
      * @param y the target y coordinate location
      * @param width the target layout bounds width
      * @param height the target layout bounds height
+     *
      */
     public void resizeRelocate(double x, double y, double width, double height) {
         resize(width, height);
@@ -3006,17 +3291,19 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This is a special value that might be returned by {@link #getBaselineOffset()}. This means
-     * that the Parent (layout Pane) of this Node should use the height of this Node as a baseline.
+     * This is a special value that might be returned by {@link #getBaselineOffset()}.
+     * This means that the Parent (layout Pane) of this Node should use the height of this Node as a
+     * baseline.
      */
     public static final double BASELINE_OFFSET_SAME_AS_HEIGHT = Double.NEGATIVE_INFINITY;
 
     /**
-     * The 'alphabetic' (or 'roman') baseline offset from the node's layoutBounds.minY location that
-     * should be used when this node is being vertically aligned by baseline with other nodes. By
-     * default this returns {@link #BASELINE_OFFSET_SAME_AS_HEIGHT} for resizable Nodes and
-     * layoutBounds height for non-resizable. Subclasses which contain text should override this
-     * method to return their actual text baseline offset.
+     * The 'alphabetic' (or 'roman') baseline offset from the node's layoutBounds.minY location
+     * that should be used when this node is being vertically aligned by baseline with
+     * other nodes. By default this returns {@link #BASELINE_OFFSET_SAME_AS_HEIGHT} for resizable
+     * Nodes
+     * and layoutBounds height for non-resizable. Subclasses
+     * which contain text should override this method to return their actual text baseline offset.
      *
      * @return offset of text baseline from layoutBounds.minY for non-resizable Nodes or
      *         {@link #BASELINE_OFFSET_SAME_AS_HEIGHT} otherwise
@@ -3030,7 +3317,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the area of this {@code Node} projected onto the physical screen in pixel units.
+     * Returns the area of this {@code Node} projected onto the
+     * physical screen in pixel units.
      * 
      * @return the area of this {@code Node} projected onto the physical screen
      * @since JavaFX 8.0
@@ -3040,12 +3328,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Help application or utility to implement LOD support by returning the projected area of a
-     * Node in pixel unit. The projected area is not clipped. For perspective camera, this method
-     * first exams node's bounds against camera's clipping plane to cut off those out of viewing
-     * frustrum. After computing areaInScreen, it applies a tight viewing frustrum check using
-     * canonical view volume. The result of areaInScreen comes from the product of (projViewTx x
-     * localToSceneTransform x localBounds). Returns 0 for those fall outside viewing frustrum.
+     * Help application or utility to implement LOD support by returning the
+     * projected area of a Node in pixel unit. The projected area is not clipped.
+     * For perspective camera, this method first exams node's bounds against
+     * camera's clipping plane to cut off those out of viewing frustrum. After
+     * computing areaInScreen, it applies a tight viewing frustrum check using
+     * canonical view volume.
+     * The result of areaInScreen comes from the product of
+     * (projViewTx x localToSceneTransform x localBounds).
+     * Returns 0 for those fall outside viewing frustrum.
      */
     private double doComputeAreaInScreen() {
         Scene tmpScene = getScene();
@@ -3143,8 +3434,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Bounds related
-     * APIs * *
+     * *************************************************************************
+     * *
+     * Bounds related APIs *
+     * *
      **************************************************************************/
 
     public final Bounds getBoundsInParent() {
@@ -3154,23 +3447,27 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * The rectangular bounds of this {@code Node} in the parent coordinate system.
      * {@code boundsInParent} is calculated by taking the {@linkplain #boundsInLocalProperty local
-     * bounds} and applying the node transforms as specified in the
-     * <a href="#Transformations">Transformations</a> section of the class doc.
+     * bounds} and applying
+     * the node transforms as specified in the <a href="#Transformations">Transformations</a>
+     * section of the class doc.
      * <p>
-     * The resulting bounds will be conceptually in the coordinate space of the {@code Node}'s
-     * parent, however, the node need not have a parent to calculate these bounds.
+     * The resulting bounds will be conceptually in the coordinate space of the
+     * {@code Node}'s parent, however, the node need not have a parent to calculate
+     * these bounds.
      * <p>
-     * Note that this method does not take the node's visibility into account; the computation is
-     * based on the geometry of this {@code Node} only.
+     * Note that this method does not take the node's visibility into account;
+     * the computation is based on the geometry of this {@code Node} only.
      * <p>
      * This property will always have a non-null value.
      * <p>
-     * Note that {@code boundsInParent} is automatically recomputed whenever the geometry of a node
-     * changes, or when any of the following the change: transforms {@code ObservableList}, any of
-     * the translate, layout or scale variables, or the rotate variable. For this reason, it is an
-     * error to bind any of these values in a node to an expression that depends upon this variable.
-     * For example, the x or y variables of a shape, or {@code translateX}, {@code translateY}
-     * should never be bound to {@code boundsInParent} for the purpose of positioning the node.
+     * Note that {@code boundsInParent} is automatically recomputed whenever the
+     * geometry of a node changes, or when any of the following the change:
+     * transforms {@code ObservableList}, any of the translate, layout or scale
+     * variables, or the rotate variable. For this reason, it is an error
+     * to bind any of these values in a node to an expression that depends upon
+     * this variable. For example, the x or y variables of a shape, or
+     * {@code translateX}, {@code translateY} should never be bound to
+     * {@code boundsInParent} for the purpose of positioning the node.
      * <p>
      * See also the <a href="#BoundingRectangles">Bounding Rectangles</a> section.
      *
@@ -3191,22 +3488,25 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The rectangular bounds of this {@code Node} in the node's untransformed local coordinate
-     * space. For nodes that extend {@link javafx.scene.shape.Shape}, the local bounds will also
-     * include space required for a non-zero stroke that may fall outside the shape's geometry that
-     * is defined by position and size attributes. The local bounds will also include any clipping
-     * set with {@link #clipProperty clip} as well as effects set with {@link #effectProperty
-     * effect}.
+     * The rectangular bounds of this {@code Node} in the node's
+     * untransformed local coordinate space. For nodes that extend
+     * {@link javafx.scene.shape.Shape}, the local bounds will also include
+     * space required for a non-zero stroke that may fall outside the shape's
+     * geometry that is defined by position and size attributes.
+     * The local bounds will also include any clipping set with {@link #clipProperty clip}
+     * as well as effects set with {@link #effectProperty effect}.
+     *
      * <p>
-     * Note that this method does not take the node's visibility into account; the computation is
-     * based on the geometry of this {@code Node} only.
+     * Note that this method does not take the node's visibility into account;
+     * the computation is based on the geometry of this {@code Node} only.
      * <p>
      * This property will always have a non-null value.
      * <p>
-     * Note that boundsInLocal is automatically recomputed whenever the geometry of a node changes.
-     * For this reason, it is an error to bind any of these values in a node to an expression that
-     * depends upon this variable. For example, the x or y variables of a shape should never be
-     * bound to boundsInLocal for the purpose of positioning the node.
+     * Note that boundsInLocal is automatically recomputed whenever the
+     * geometry of a node changes. For this reason, it is an error to bind any
+     * of these values in a node to an expression that depends upon this variable.
+     * For example, the x or y variables of a shape should never be bound
+     * to boundsInLocal for the purpose of positioning the node.
      * 
      * @return the boundsInLocal for this {@code Node}
      */
@@ -3221,34 +3521,38 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The rectangular bounds that should be used for layout calculations for this node.
-     * {@code layoutBounds} may differ from the visual bounds of the node and is computed
-     * differently depending on the node type.
+     * The rectangular bounds that should be used for layout calculations for
+     * this node. {@code layoutBounds} may differ from the visual bounds
+     * of the node and is computed differently depending on the node type.
      * <p>
      * If the node type is resizable ({@link javafx.scene.layout.Region Region},
      * {@link javafx.scene.control.Control Control}, or {@link javafx.scene.web.WebView WebView})
-     * then the layoutBounds will always be {@code 0,0 width x height}. If the node type is not
-     * resizable ({@link javafx.scene.shape.Shape Shape}, {@link javafx.scene.text.Text Text}, or
-     * {@link Group}), then the {@code layoutBounds} are computed based on the node's geometric
-     * properties and does not include the node's clip, effect, or transforms. See individual class
-     * documentation for details.
+     * then the layoutBounds will always be {@code 0,0 width x height}.
+     * If the node type is not resizable ({@link javafx.scene.shape.Shape Shape},
+     * {@link javafx.scene.text.Text Text}, or {@link Group}), then the {@code layoutBounds}
+     * are computed based on the node's geometric properties and does not include the
+     * node's clip, effect, or transforms. See individual class documentation
+     * for details.
      * <p>
      * Note that the {@link #layoutXProperty layoutX}, {@link #layoutYProperty layoutY},
-     * {@link #translateXProperty translateX}, and {@link #translateYProperty translateY} variables
-     * are not included in the layoutBounds. This is important because layout code must first
-     * determine the current size and location of the node (using {@code layoutBounds}) and then set
-     * {@code layoutX} and {@code layoutY} to adjust the translation of the node so that it will
-     * have the desired layout position.
+     * {@link #translateXProperty translateX}, and {@link #translateYProperty translateY}
+     * variables are not included in the layoutBounds.
+     * This is important because layout code must first determine the current
+     * size and location of the node (using {@code layoutBounds}) and then set
+     * {@code layoutX} and {@code layoutY} to adjust the translation of the
+     * node so that it will have the desired layout position.
      * <p>
-     * Because the computation of layoutBounds is often tied to a node's geometric variables, it is
-     * an error to bind any such variables to an expression that depends upon {@code layoutBounds}.
-     * For example, the x or y variables of a shape should never be bound to {@code layoutBounds}
+     * Because the computation of layoutBounds is often tied to a node's
+     * geometric variables, it is an error to bind any such variables to an
+     * expression that depends upon {@code layoutBounds}. For example, the
+     * x or y variables of a shape should never be bound to {@code layoutBounds}
      * for the purpose of positioning the node.
      * <p>
-     * Note that for 3D shapes, the layout bounds is actually a rectangular box with X, Y, and Z
-     * values, although only X and Y are used in layout calculations.
+     * Note that for 3D shapes, the layout bounds is actually a rectangular box
+     * with X, Y, and Z values, although only X and Y are used in layout calculations.
      * <p>
      * The {@code layoutBounds} will never be null.
+     *
      */
     private LazyBoundsProperty layoutBounds = new LazyBoundsProperty() {
         @Override
@@ -3276,90 +3580,115 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Bounds And Transforms Computation This section of the code is responsible for computing and
-     * caching various bounds and transforms. For optimal performance and minimal recomputation of
-     * bounds (which can be quite expensive), we cache values on two different levels. We expose two
-     * public immutable Bounds boundsInParent objects and boundsInLocal. Because they are immutable
-     * and because they may change quite frequently (especially in the case of a Parent whose
-     * children are animated), it is important that the system does not rely on these variables,
-     * because doing so would produce a large amount of garbage. Rather, these variables are
-     * provided solely for the convenience of application developers and, being lazily bound, should
-     * generally be created at most once per frame. The second level of caching are within local
-     * Bounds2D variables. These variables, txBounds and geomBounds, are mutable and as such can be
-     * cached and updated as frequently as necessary without creating excessive garbage. However,
-     * since the computation of bounds is still expensive, it is desirable to cache both the
-     * geometric bounds and the "complete" transformed bounds (essentially, boundsInParent). Cached
-     * txBounds is particularly useful when computing the geometric bounds of a Parent since it
-     * would not require complete or partial recomputation of each child. Finally, we cache the
-     * complete transform for this node which converts its coord system from local to parent coords.
-     * This is useful both for minimizing bounds recomputations in the case of the geometry having
-     * changed but the transform not having changed, and also because the tx is required for several
-     * different computations (for example, it must be computed once during state synchronization
-     * with the PG peer, and must also be computed when the pivot point changes, and also when
-     * deriving the txBounds of the Node). As with any caching system, a subtle and non-trivial
-     * amount of code is devoted to invalidating the bounds / transforms at appropriate times and in
-     * appropriate places to make sure bounds / transforms are recomputed at all necessary times.
-     * There are three computeXXX functions. One is for computing the boundsInParent, the second for
-     * computing boundsInLocal, and the third for computing the default layout bounds (which, by
-     * default, is based on the geometric bounds). These functions are all prefixed with "compute"
-     * because they create and return new immutable Bounds objects. There are three getXXXBounds
-     * functions. One is for returning the complete transformed bounds. The second is for returning
-     * the local bounds. The last is for returning the geometric bounds. These functions are all
-     * prefixed with "get" because they may well return a cached value, or may actually compute the
-     * bounds if necessary. These functions all have the same signature. They take a Bounds2D and
-     * BaseTransform, and return a Bounds2D (the same as they took). These functions essentially
-     * populate the supplied bounds2D with the appropriate bounds information, leveraging cached
-     * bounds if possible. There is a single NodeHelper.computeGeomBoundsImpl function which is
-     * abstract. This must be implemented in each subclass, and is responsible for computing the
-     * actual geometric bounds for the Node. For example, Parent is written such that this function
-     * is the union of the transformed bounds of each child. Rectangle is written such that this
-     * takes into account the size and stroke. Text is written such that it is computed based on the
-     * actual glyphs. There are two updateXXX functions, updateGeomBounds and updateTxBounds. These
-     * functions are for ensuring that geomBounds and txBounds are valid. They only execute in the
-     * case of the cached value being invalid, so the function call is very cheap in cases where the
-     * cached bounds values are still valid.
+     * Bounds And Transforms Computation
+     * This section of the code is responsible for computing and caching
+     * various bounds and transforms. For optimal performance and minimal
+     * recomputation of bounds (which can be quite expensive), we cache
+     * values on two different levels. We expose two public immutable
+     * Bounds boundsInParent objects and boundsInLocal. Because they are
+     * immutable and because they may change quite frequently (especially
+     * in the case of a Parent whose children are animated), it is
+     * important that the system does not rely on these variables, because
+     * doing so would produce a large amount of garbage. Rather, these
+     * variables are provided solely for the convenience of application
+     * developers and, being lazily bound, should generally be created at
+     * most once per frame.
+     * The second level of caching are within local Bounds2D variables.
+     * These variables, txBounds and geomBounds, are mutable and as such
+     * can be cached and updated as frequently as necessary without creating
+     * excessive garbage. However, since the computation of bounds is still
+     * expensive, it is desirable to cache both the geometric bounds and
+     * the "complete" transformed bounds (essentially, boundsInParent).
+     * Cached txBounds is particularly useful when computing the geometric
+     * bounds of a Parent since it would not require complete or partial
+     * recomputation of each child.
+     * Finally, we cache the complete transform for this node which converts
+     * its coord system from local to parent coords. This is useful both for
+     * minimizing bounds recomputations in the case of the geometry having
+     * changed but the transform not having changed, and also because the tx
+     * is required for several different computations (for example, it must
+     * be computed once during state synchronization with the PG peer, and
+     * must also be computed when the pivot point changes, and also when
+     * deriving the txBounds of the Node).
+     * As with any caching system, a subtle and non-trivial amount of code
+     * is devoted to invalidating the bounds / transforms at appropriate
+     * times and in appropriate places to make sure bounds / transforms
+     * are recomputed at all necessary times.
+     * There are three computeXXX functions. One is for computing the
+     * boundsInParent, the second for computing boundsInLocal, and the
+     * third for computing the default layout bounds (which, by default,
+     * is based on the geometric bounds). These functions are all prefixed
+     * with "compute" because they create and return new immutable
+     * Bounds objects.
+     * There are three getXXXBounds functions. One is for returning the
+     * complete transformed bounds. The second is for returning the
+     * local bounds. The last is for returning the geometric bounds. These
+     * functions are all prefixed with "get" because they may well return
+     * a cached value, or may actually compute the bounds if necessary. These
+     * functions all have the same signature. They take a Bounds2D and
+     * BaseTransform, and return a Bounds2D (the same as they took). These
+     * functions essentially populate the supplied bounds2D with the
+     * appropriate bounds information, leveraging cached bounds if possible.
+     * There is a single NodeHelper.computeGeomBoundsImpl function which is abstract.
+     * This must be implemented in each subclass, and is responsible for
+     * computing the actual geometric bounds for the Node. For example, Parent
+     * is written such that this function is the union of the transformed
+     * bounds of each child. Rectangle is written such that this takes into
+     * account the size and stroke. Text is written such that it is computed
+     * based on the actual glyphs.
+     * There are two updateXXX functions, updateGeomBounds and updateTxBounds.
+     * These functions are for ensuring that geomBounds and txBounds are
+     * valid. They only execute in the case of the cached value being invalid,
+     * so the function call is very cheap in cases where the cached bounds
+     * values are still valid.
      */
 
     /**
-     * An affine transform that holds the computed local-to-parent transform. This is the
-     * concatenation of all transforms in this node, including all of the convenience transforms.
+     * An affine transform that holds the computed local-to-parent transform.
+     * This is the concatenation of all transforms in this node, including all
+     * of the convenience transforms.
      */
     private BaseTransform localToParentTx = BaseTransform.IDENTITY_TRANSFORM;
 
     /**
-     * This flag is used to indicate that localToParentTx is dirty and needs to be recomputed.
+     * This flag is used to indicate that localToParentTx is dirty and needs
+     * to be recomputed.
      */
     private boolean transformDirty = true;
 
     /**
-     * The cached transformed bounds. This is never null, but is frequently set to be invalid
-     * whenever the bounds for the node have changed. These are "complete" bounds, that is, with
-     * transforms and effect and clip applied. Note that this is equivalent to boundsInParent
+     * The cached transformed bounds. This is never null, but is frequently set
+     * to be invalid whenever the bounds for the node have changed. These are
+     * "complete" bounds, that is, with transforms and effect and clip applied.
+     * Note that this is equivalent to boundsInParent
      */
     private BaseBounds txBounds = new RectBounds();
 
     /**
-     * The cached bounds. This is never null, but is frequently set to be invalid whenever the
-     * bounds for the node have changed. These are the "content" bounds, that is, without transforms
-     * or effects applied.
+     * The cached bounds. This is never null, but is frequently set to be
+     * invalid whenever the bounds for the node have changed. These are the
+     * "content" bounds, that is, without transforms or effects applied.
      */
     private BaseBounds geomBounds = new RectBounds();
 
     /**
-     * The cached local bounds (without transforms, with clip and effects). If there is neither clip
-     * nor effect local bounds are equal to geom bounds, so in this case we don't keep the extra
-     * instance and set null to this variable.
+     * The cached local bounds (without transforms, with clip and effects).
+     * If there is neither clip nor effect
+     * local bounds are equal to geom bounds, so in this case we don't keep
+     * the extra instance and set null to this variable.
      */
     private BaseBounds localBounds = null;
 
     /**
-     * This special flag is used only by Parent to flag whether or not the *parent* has processed
-     * the fact that bounds have changed for this child Node. We need some way of flagging this on a
-     * per-node basis to enable the significant performance optimizations and fast paths that are in
-     * the Parent code.
+     * This special flag is used only by Parent to flag whether or not
+     * the *parent* has processed the fact that bounds have changed for this
+     * child Node. We need some way of flagging this on a per-node basis to
+     * enable the significant performance optimizations and fast paths that
+     * are in the Parent code.
      * <p>
-     * To reduce confusion, although this variable is defined on Node, it really belongs to the
-     * Parent of the node and should *only* be modified by the parent.
+     * To reduce confusion, although this variable is defined on Node, it
+     * really belongs to the Parent of the node and should *only* be modified
+     * by the parent.
      */
     boolean boundsChanged;
 
@@ -3375,10 +3704,12 @@ public abstract class Node implements EventTarget, Styleable {
 
     /*
      * Subclasses may customize the layoutBounds by means of overriding the
-     * NodeHelper.computeLayoutBoundsImpl method. If the layout bounds need to be recomputed, the
-     * subclass must notify the Node implementation of this fact so that appropriate notifications
-     * and internal state can be kept in sync. Subclasses must call NodeHelper.layoutBoundsChanged
-     * to let Node know that the layout bounds are invalid and need to be recomputed.
+     * NodeHelper.computeLayoutBoundsImpl method. If the layout bounds need to be
+     * recomputed, the subclass must notify the Node implementation of this
+     * fact so that appropriate notifications and internal state can be
+     * kept in sync. Subclasses must call NodeHelper.layoutBoundsChanged to
+     * let Node know that the layout bounds are invalid and need to be
+     * recomputed.
      */
     final void layoutBoundsChanged() {
         if (!layoutBounds.valid) {
@@ -3394,12 +3725,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Loads the given bounds object with the transformed bounds relative to, and based on, the
-     * given transform. That is, this is the local bounds with the local-to-parent transform
-     * applied. We *never* pass null in as a bounds. This method will NOT take a null bounds object.
-     * The returned value may be the same bounds object passed in, or it may be a new object. The
-     * reason for this object promotion is in the case of needing to promote from a RectBounds to a
-     * BoxBounds (3D).
+     * Loads the given bounds object with the transformed bounds relative to,
+     * and based on, the given transform. That is, this is the local bounds
+     * with the local-to-parent transform applied.
+     *
+     * We *never* pass null in as a bounds. This method will
+     * NOT take a null bounds object. The returned value may be
+     * the same bounds object passed in, or it may be a new object.
+     * The reason for this object promotion is in the case of needing
+     * to promote from a RectBounds to a BoxBounds (3D).
      */
     BaseBounds getTransformedBounds(BaseBounds bounds, BaseTransform tx) {
         updateLocalToParentTransform();
@@ -3440,11 +3774,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Loads the given bounds object with the local bounds relative to, and based on, the given
-     * transform. That is, these are the geometric bounds + clip and effect. We *never* pass null in
-     * as a bounds. This method will NOT take a null bounds object. The returned value may be the
-     * same bounds object passed in, or it may be a new object. The reason for this object promotion
-     * is in the case of needing to promote from a RectBounds to a BoxBounds (3D).
+     * Loads the given bounds object with the local bounds relative to,
+     * and based on, the given transform. That is, these are the geometric
+     * bounds + clip and effect.
+     *
+     * We *never* pass null in as a bounds. This method will
+     * NOT take a null bounds object. The returned value may be
+     * the same bounds object passed in, or it may be a new object.
+     * The reason for this object promotion is in the case of needing
+     * to promote from a RectBounds to a BoxBounds (3D).
      */
     BaseBounds getLocalBounds(BaseBounds bounds, BaseTransform tx) {
         if (getEffect() == null && getClip() == null) {
@@ -3482,11 +3820,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Loads the given bounds object with the geometric bounds relative to, and based on, the given
-     * transform. We *never* pass null in as a bounds. This method will NOT take a null bounds
-     * object. The returned value may be the same bounds object passed in, or it may be a new
-     * object. The reason for this object promotion is in the case of needing to promote from a
-     * RectBounds to a BoxBounds (3D).
+     * Loads the given bounds object with the geometric bounds relative to,
+     * and based on, the given transform.
+     *
+     * We *never* pass null in as a bounds. This method will
+     * NOT take a null bounds object. The returned value may be
+     * the same bounds object passed in, or it may be a new object.
+     * The reason for this object promotion is in the case of needing
+     * to promote from a RectBounds to a BoxBounds (3D).
      */
     BaseBounds getGeomBounds(BaseBounds bounds, BaseTransform tx) {
         if (tx.isTranslateOrIdentity()) {
@@ -3520,8 +3861,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If necessary, recomputes the cached geom bounds. If the bounds are not invalid, then this
-     * method is a no-op.
+     * If necessary, recomputes the cached geom bounds. If the bounds are not
+     * invalid, then this method is a no-op.
      */
     void updateGeomBounds() {
         if (geomBoundsInvalid) {
@@ -3563,8 +3904,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If necessary, recomputes the cached local bounds. If the bounds are not invalid, then this
-     * method is a no-op.
+     * If necessary, recomputes the cached local bounds. If the bounds are not
+     * invalid, then this method is a no-op.
      */
     private void updateLocalBounds() {
         if (localBoundsInvalid) {
@@ -3578,8 +3919,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If necessary, recomputes the cached transformed bounds. If the cached transformed bounds are
-     * not invalid, then this method is a no-op.
+     * If necessary, recomputes the cached transformed bounds.
+     * If the cached transformed bounds are not invalid, then
+     * this method is a no-op.
      */
     void updateTxBounds() {
         if (txBoundsInvalid) {
@@ -3590,61 +3932,85 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Bounds Invalidation And Notification The goal of this section is to efficiently propagate
-     * bounds invalidation through the scenegraph while also being semantically correct. The code
-     * path for invalidation of layout bounds is somewhat confusing primarily due to performance
-     * enhancements and the desire to reduce the number of requestLayout() calls that are performed
-     * when layout bounds change. Before diving into layout bounds, I will first describe how normal
-     * bounds invalidation occurs. When a node's geometry changes (for example, if the width of a
-     * Rectangle is changed) then the Node must call NodeHelper.geomChanged(). Invoking this
-     * function will eventually clear all cached bounds and notify to each parent up the tree that
-     * their bounds may have changed. After invalidating geomBounds (and after kicking off layout
-     * bounds notification), NodeHelper.geomChanged calls localBoundsChanged(). It should be noted
-     * that NodeHelper.geomChanged should only be called when the geometry of the node has changed
-     * such that it may result in the geom bounds actually changing. localBoundsChanged() simply
-     * invalidates boundsInLocal and then calls transformedBoundsChanged().
-     * transformedBoundsChanged() is responsible for invalidating boundsInParent and txBounds. If
-     * the Node is not visible, then there is no need to notify the parent of the bounds change
-     * because the parent's bounds do not include invisible nodes. If the node is visible, then it
-     * must tell the parent that this child node's bounds have changed. It is up to the parent to
-     * eventually invoke its own NodeHelper.geomChanged function. If instead of a parent this node
-     * has a clipParent, then the clipParent's localBoundsChanged() is called instead. There are a
-     * few other ways in which we enter the invalidate steps beyond just the geometry changes. If
-     * the visibility of a Node changes, its own bounds are not affected but its parent's bounds
-     * are. So a special call to parent.childVisibilityChanged is made so the parent can react
-     * accordingly. If a transform is changed (layoutX, layoutY, rotate, transforms, etc) then the
-     * transform must be invalidated. When a transform is invalidated, it must also invalidate the
-     * txBounds by invoking transformedBoundsChanged, which will in turn notify the parent as
-     * before. If an effect is changed or replaced then the local bounds must be invalidated, as
-     * well as the transformedBounds and the parent notified of the change in bounds. layoutBound is
-     * somewhat unique in that it can be redefined in subclasses. By default, the layoutBounds is
-     * the geomBounds, and so whenever the geomBounds() function is called the layoutBounds must be
-     * invalidated. However in subclasses, especially Resizables, the layout bounds may not be
-     * defined to be the same as the geometric bounds. This is both useful and provides a very nice
-     * performance optimization for regions and controls. In this case, subclasses need some way to
-     * interpose themselves such that a call to NodeHelper.geomChanged() *does not* invalidate the
-     * layout bounds. This interposition happens by providing the
-     * NodeHelper.notifyLayoutBoundsChanged function. The default implementation simply invalidates
-     * boundsInLocal. Subclasses (such as Region and Control) can override this function so that it
-     * does not invalidate the layout bounds. An on invalidate trigger on layoutBounds handles
-     * kicking off the rest of the invalidate process for layoutBounds. Because the layout bounds
-     * define the pivot point, if scaleX, scaleY, or rotate contain non-identity values then
-     * whenever the layoutBounds change the transformed bounds also change. Finally, if this node's
-     * parent is a Region and if the Node is being managed by the Region, then we must call
-     * requestLayout on the Region whenever the layout bounds have changed.
+     * Bounds Invalidation And Notification
+     * The goal of this section is to efficiently propagate bounds
+     * invalidation through the scenegraph while also being semantically
+     * correct.
+     * The code path for invalidation of layout bounds is somewhat confusing
+     * primarily due to performance enhancements and the desire to reduce the
+     * number of requestLayout() calls that are performed when layout bounds
+     * change. Before diving into layout bounds, I will first describe how
+     * normal bounds invalidation occurs.
+     * When a node's geometry changes (for example, if the width of a
+     * Rectangle is changed) then the Node must call NodeHelper.geomChanged().
+     * Invoking this function will eventually clear all cached bounds and
+     * notify to each parent up the tree that their bounds may have changed.
+     * After invalidating geomBounds (and after kicking off layout bounds
+     * notification), NodeHelper.geomChanged calls localBoundsChanged(). It should
+     * be noted that NodeHelper.geomChanged should only be called when the geometry
+     * of the node has changed such that it may result in the geom bounds
+     * actually changing.
+     * localBoundsChanged() simply invalidates boundsInLocal and then calls
+     * transformedBoundsChanged().
+     * transformedBoundsChanged() is responsible for invalidating
+     * boundsInParent and txBounds. If the Node is not visible, then there is
+     * no need to notify the parent of the bounds change because the parent's
+     * bounds do not include invisible nodes. If the node is visible, then
+     * it must tell the parent that this child node's bounds have changed.
+     * It is up to the parent to eventually invoke its own NodeHelper.geomChanged
+     * function. If instead of a parent this node has a clipParent, then the
+     * clipParent's localBoundsChanged() is called instead.
+     * There are a few other ways in which we enter the invalidate steps
+     * beyond just the geometry changes. If the visibility of a Node changes,
+     * its own bounds are not affected but its parent's bounds are. So a
+     * special call to parent.childVisibilityChanged is made so the parent
+     * can react accordingly.
+     * If a transform is changed (layoutX, layoutY, rotate, transforms, etc)
+     * then the transform must be invalidated. When a transform is invalidated,
+     * it must also invalidate the txBounds by invoking
+     * transformedBoundsChanged, which will in turn notify the parent as
+     * before.
+     * If an effect is changed or replaced then the local bounds must be
+     * invalidated, as well as the transformedBounds and the parent notified
+     * of the change in bounds.
+     * layoutBound is somewhat unique in that it can be redefined in
+     * subclasses. By default, the layoutBounds is the geomBounds, and so
+     * whenever the geomBounds() function is called the layoutBounds
+     * must be invalidated. However in subclasses, especially Resizables,
+     * the layout bounds may not be defined to be the same as the geometric
+     * bounds. This is both useful and provides a very nice performance
+     * optimization for regions and controls. In this case, subclasses
+     * need some way to interpose themselves such that a call to
+     * NodeHelper.geomChanged() *does not* invalidate the layout bounds.
+     * This interposition happens by providing the
+     * NodeHelper.notifyLayoutBoundsChanged function. The default implementation
+     * simply invalidates boundsInLocal. Subclasses (such as Region and
+     * Control) can override this function so that it does not invalidate
+     * the layout bounds.
+     * An on invalidate trigger on layoutBounds handles kicking off the rest
+     * of the invalidate process for layoutBounds. Because the layout bounds
+     * define the pivot point, if scaleX, scaleY, or rotate contain
+     * non-identity values then whenever the layoutBounds change the
+     * transformed bounds also change. Finally, if this node's parent is
+     * a Region and if the Node is being managed by the Region, then
+     * we must call requestLayout on the Region whenever the layout bounds
+     * have changed.
      */
 
     /*
-     * Invoked by subclasses whenever their geometric bounds have changed. Because the default
-     * layout bounds is based on the node geometry, this function will invoke
-     * NodeHelper.notifyLayoutBoundsChanged. The default implementation of
-     * NodeHelper.notifyLayoutBoundsChanged() will simply invalidate layoutBounds. Resizable
-     * subclasses will want to override this function in most cases to be a no-op. This function
-     * will also invalidate the cached geom bounds, and then invoke localBoundsChanged() which will
-     * eventually end up invoking a chain of functions up the tree to ensure that each parent of
-     * this Node is notified that its bounds may have also changed. This function should be treated
-     * as though it were final. It is not intended to be overridden by subclasses. Note: This method
-     * MUST only be called via its accessor method.
+     * Invoked by subclasses whenever their geometric bounds have changed.
+     * Because the default layout bounds is based on the node geometry, this
+     * function will invoke NodeHelper.notifyLayoutBoundsChanged. The default
+     * implementation of NodeHelper.notifyLayoutBoundsChanged() will simply invalidate
+     * layoutBounds. Resizable subclasses will want to override this function
+     * in most cases to be a no-op.
+     * This function will also invalidate the cached geom bounds, and then
+     * invoke localBoundsChanged() which will eventually end up invoking a
+     * chain of functions up the tree to ensure that each parent of this
+     * Node is notified that its bounds may have also changed.
+     * This function should be treated as though it were final. It is not
+     * intended to be overridden by subclasses.
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doGeomChanged() {
         if (geomBoundsInvalid) {
@@ -3671,8 +4037,8 @@ public abstract class Node implements EventTarget, Styleable {
     private boolean txBoundsInvalid = true;
 
     /**
-     * Responds to changes in the local bounds by invalidating boundsInLocal and notifying this node
-     * that its transformed bounds have changed.
+     * Responds to changes in the local bounds by invalidating boundsInLocal
+     * and notifying this node that its transformed bounds have changed.
      */
     void localBoundsChanged() {
         localBoundsInvalid = true;
@@ -3681,10 +4047,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Responds to changes in the transformed bounds by invalidating txBounds and boundsInParent. If
-     * this Node is not visible, then we have no need to walk further up the tree but can instead
-     * simply invalidate state. Otherwise, this function will notify parents (either the parent or
-     * the clipParent) that this child Node's bounds have changed.
+     * Responds to changes in the transformed bounds by invalidating txBounds
+     * and boundsInParent. If this Node is not visible, then we have no need
+     * to walk further up the tree but can instead simply invalidate state.
+     * Otherwise, this function will notify parents (either the parent or the
+     * clipParent) that this child Node's bounds have changed.
      */
     void transformedBoundsChanged() {
         if (!txBoundsInvalid) {
@@ -3699,11 +4066,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Invoked by geomChanged(). Since layoutBounds is by default based on the geometric bounds, the
-     * default implementation of this function will invalidate the layoutBounds. Resizable Node
-     * subclasses generally base layoutBounds on the width/height instead of the geometric bounds,
-     * and so will generally want to override this function to be a no-op. Note: This method MUST
-     * only be called via its accessor method.
+     * Invoked by geomChanged(). Since layoutBounds is by default based
+     * on the geometric bounds, the default implementation of this function will
+     * invalidate the layoutBounds. Resizable Node subclasses generally base
+     * layoutBounds on the width/height instead of the geometric bounds, and so
+     * will generally want to override this function to be a no-op.
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doNotifyLayoutBoundsChanged() {
         layoutBoundsChanged();
@@ -3720,9 +4088,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Notifies both the real parent and the clip parent (if they exist) that the bounds of the
-     * child has changed. Note that since FX doesn't throw NPE's, things actually are faster if we
-     * don't check twice for Null (we check once, the compiler checks again)
+     * Notifies both the real parent and the clip parent (if they exist) that
+     * the bounds of the child has changed. Note that since FX doesn't throw
+     * NPE's, things actually are faster if we don't check twice for Null
+     * (we check once, the compiler checks again)
      */
     void notifyParentOfBoundsChange() {
         // let the parent know which node has changed and the parent will
@@ -3740,16 +4109,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Geometry and
-     * coordinate system related APIs. For example, methods * related to containment, intersection,
-     * coordinate space conversion, etc. * *
+     * *************************************************************************
+     * *
+     * Geometry and coordinate system related APIs. For example, methods *
+     * related to containment, intersection, coordinate space conversion, etc. *
+     * *
      **************************************************************************/
 
     /**
-     * Returns {@code true} if the given point (specified in the local coordinate space of this
-     * {@code Node}) is contained within the shape of this {@code Node}. Note that this method does
-     * not take visibility into account; the test is based on the geometry of this {@code Node}
-     * only.
+     * Returns {@code true} if the given point (specified in the local
+     * coordinate space of this {@code Node}) is contained within the shape of
+     * this {@code Node}. Note that this method does not take visibility into
+     * account; the test is based on the geometry of this {@code Node} only.
      * 
      * @param localX the x coordinate of the point in Node's space
      * @param localY the y coordinate of the point in Node's space
@@ -3763,10 +4134,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * This method only does the contains check based on the bounds, clip and effect of this node,
-     * excluding its shape (or geometry). Returns true if the given point (specified in the local
-     * coordinate space of this {@code Node}) is contained within the bounds, clip and effect of
-     * this node.
+     * This method only does the contains check based on the bounds, clip and
+     * effect of this node, excluding its shape (or geometry).
+     * Returns true if the given point (specified in the local
+     * coordinate space of this {@code Node}) is contained within the bounds,
+     * clip and effect of this node.
      */
     private boolean containsBounds(double localX, double localY) {
         final TempState tempState = TempState.getInstance();
@@ -3798,10 +4170,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns {@code true} if the given point (specified in the local coordinate space of this
-     * {@code Node}) is contained within the shape of this {@code Node}. Note that this method does
-     * not take visibility into account; the test is based on the geometry of this {@code Node}
-     * only.
+     * Returns {@code true} if the given point (specified in the local
+     * coordinate space of this {@code Node}) is contained within the shape of
+     * this {@code Node}. Note that this method does not take visibility into
+     * account; the test is based on the geometry of this {@code Node} only.
      * 
      * @param localPoint the 2D point in Node's space
      * @return the result of contains for this {@code Node}
@@ -3811,11 +4183,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns {@code true} if the given rectangle (specified in the local coordinate space of this
-     * {@code Node}) intersects the shape of this {@code Node}. Note that this method does not take
-     * visibility into account; the test is based on the geometry of this {@code Node} only. The
-     * default behavior of this function is simply to check if the given coordinates intersect with
-     * the local bounds.
+     * Returns {@code true} if the given rectangle (specified in the local
+     * coordinate space of this {@code Node}) intersects the shape of this
+     * {@code Node}. Note that this method does not take visibility into
+     * account; the test is based on the geometry of this {@code Node} only.
+     * The default behavior of this function is simply to check if the
+     * given coordinates intersect with the local bounds.
      * 
      * @param localX the x coordinate of a rectangle in Node's space
      * @param localY the y coordinate of a rectangle in Node's space
@@ -3830,11 +4203,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns {@code true} if the given bounds (specified in the local coordinate space of this
-     * {@code Node}) intersects the shape of this {@code Node}. Note that this method does not take
-     * visibility into account; the test is based on the geometry of this {@code Node} only. The
-     * default behavior of this function is simply to check if the given coordinates intersect with
-     * the local bounds.
+     * Returns {@code true} if the given bounds (specified in the local
+     * coordinate space of this {@code Node}) intersects the shape of this
+     * {@code Node}. Note that this method does not take visibility into
+     * account; the test is based on the geometry of this {@code Node} only.
+     * The default behavior of this function is simply to check if the
+     * given coordinates intersect with the local bounds.
      * 
      * @param localBounds the bounds
      * @return the result of intersects for this {@code Node}
@@ -3844,8 +4218,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the {@link javafx.stage.Screen} into the
-     * local coordinate space of this {@code Node}.
+     * Transforms a point from the coordinate space of the {@link javafx.stage.Screen}
+     * into the local coordinate space of this {@code Node}.
      * 
      * @param screenX x coordinate of a point on a Screen
      * @param screenY y coordinate of a point on a Screen
@@ -3884,8 +4258,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the {@link javafx.stage.Screen} into the
-     * local coordinate space of this {@code Node}.
+     * Transforms a point from the coordinate space of the {@link javafx.stage.Screen}
+     * into the local coordinate space of this {@code Node}.
      * 
      * @param screenPoint a point on a Screen
      * @return local Node's coordinates of the point or null if Node is not in a {@link Window}.
@@ -3897,12 +4271,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a rectangle from the coordinate space of the {@link javafx.stage.Screen} into the
-     * local coordinate space of this {@code Node}. Returns reasonable result only in 2D space.
+     * Transforms a rectangle from the coordinate space of the
+     * {@link javafx.stage.Screen} into the local coordinate space of this
+     * {@code Node}. Returns reasonable result only in 2D space.
      * 
      * @param screenBounds bounds on a Screen
-     * @return bounds in the local Node'space or null if Node is not in a {@link Window}. Null is
-     *         also returned if the transformation from local to Scene is not invertible.
+     * @return bounds in the local Node'space or null if Node is not in a {@link Window}.
+     *         Null is also returned if the transformation from local to Scene is not invertible.
      * @since JavaFX 8.0
      */
     public Bounds screenToLocal(Bounds screenBounds) {
@@ -3915,11 +4290,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. If the Node does not have any {@link SubScene} or {@code rootScene} is set
-     * to true, the arguments are in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #sceneToLocal(double, double)}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * arguments are in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #sceneToLocal(double, double)}.
      *
      * @param x the x coordinate
      * @param y the y coordinate
@@ -3953,11 +4329,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. If the Node does not have any {@link SubScene} or {@code rootScene} is set
-     * to true, the arguments are in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #sceneToLocal(javafx.geometry.Point2D)}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * arguments are in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #sceneToLocal(javafx.geometry.Point2D)}.
      *
      * @param point the point
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
@@ -3969,11 +4346,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a bounds from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. If the Node does not have any {@link SubScene} or {@code rootScene} is set
-     * to true, the arguments are in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #sceneToLocal(javafx.geometry.Bounds)}.
+     * Transforms a bounds from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * arguments are in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #sceneToLocal(javafx.geometry.Bounds)}.
      * <p>
      * Since 3D bounds cannot be converted with {@code rootScene} set to {@code true}, trying to
      * convert 3D bounds will yield {@code null}.
@@ -4000,9 +4378,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. Note that if this node is in a {@link SubScene}, the arguments should be
-     * in the subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     *
+     * Note that if this node is in a {@link SubScene}, the arguments should be in the subscene
+     * coordinates,
+     * not that of {@link javafx.scene.Scene}.
      *
      * @param sceneX x coordinate of a point on a Scene
      * @param sceneY y coordinate of a point on a Scene
@@ -4021,9 +4402,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. Note that if this node is in a {@link SubScene}, the arguments should be
-     * in the subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     *
+     * Note that if this node is in a {@link SubScene}, the arguments should be in the subscene
+     * coordinates,
+     * not that of {@link javafx.scene.Scene}.
      *
      * @param scenePoint a point on a Scene
      * @return local Node's coordinates of the point or null if Node is not in a {@link Window}.
@@ -4034,9 +4418,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. Note that if this node is in a {@link SubScene}, the arguments should be
-     * in the subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     *
+     * Note that if this node is in a {@link SubScene}, the arguments should be in the subscene
+     * coordinates,
+     * not that of {@link javafx.scene.Scene}.
      *
      * @param scenePoint a point on a Scene
      * @return local Node's coordinates of the point or null if Node is not in a {@link Window}.
@@ -4048,9 +4435,12 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the scene into the local coordinate space of
-     * this {@code Node}. Note that if this node is in a {@link SubScene}, the arguments should be
-     * in the subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the coordinate space of the scene
+     * into the local coordinate space of this {@code Node}.
+     *
+     * Note that if this node is in a {@link SubScene}, the arguments should be in the subscene
+     * coordinates,
+     * not that of {@link javafx.scene.Scene}.
      *
      * @param sceneX x coordinate of a point on a Scene
      * @param sceneY y coordinate of a point on a Scene
@@ -4078,13 +4468,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a rectangle from the coordinate space of the scene into the local coordinate space
-     * of this {@code Node}. Note that if this node is in a {@link SubScene}, the arguments should
-     * be in the subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a rectangle from the coordinate space of the
+     * scene into the local coordinate space of this
+     * {@code Node}.
+     *
+     * Note that if this node is in a {@link SubScene}, the arguments should be in the subscene
+     * coordinates,
+     * not that of {@link javafx.scene.Scene}.
      *
      * @param sceneBounds bounds on a Scene
-     * @return bounds in the local Node'space or null if Node is not in a {@link Window}. Null is
-     *         also returned if the transformation from local to Scene is not invertible.
+     * @return bounds in the local Node'space or null if Node is not in a {@link Window}.
+     *         Null is also returned if the transformation from local to Scene is not invertible.
      */
     public Bounds sceneToLocal(Bounds sceneBounds) {
         // Do a quick update of localToParentTransform so that we can determine
@@ -4114,8 +4508,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its {@link javafx.stage.Screen}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its {@link javafx.stage.Screen}.
      * 
      * @param localX x coordinate of a point in Node's space
      * @param localY y coordinate of a point in Node's space
@@ -4127,8 +4521,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its {@link javafx.stage.Screen}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its {@link javafx.stage.Screen}.
      * 
      * @param localPoint a point in Node's space
      * @return screen coordinates of the point or null if Node is not in a {@link Window}
@@ -4139,8 +4533,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its {@link javafx.stage.Screen}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its {@link javafx.stage.Screen}.
      * 
      * @param localX x coordinate of a point in Node's space
      * @param localY y coordinate of a point in Node's space
@@ -4165,8 +4559,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its {@link javafx.stage.Screen}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its {@link javafx.stage.Screen}.
      * 
      * @param localPoint a point in Node's space
      * @return screen coordinates of the point or null if Node is not in a {@link Window}
@@ -4177,8 +4571,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a bounds from the local coordinate space of this {@code Node} into the coordinate
-     * space of its {@link javafx.stage.Screen}.
+     * Transforms a bounds from the local coordinate space of this
+     * {@code Node} into the coordinate space of its {@link javafx.stage.Screen}.
      * 
      * @param localBounds bounds in Node's space
      * @return the bounds in screen coordinates or null if Node is not in a {@link Window}
@@ -4198,9 +4592,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. Note that if this node is in a {@link SubScene}, the result is in the
-     * subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * Note that if this node is in a {@link SubScene}, the result is in the subscene coordinates,
+     * not that of {@link javafx.scene.Scene}.
      * 
      * @param localX x coordinate of a point in Node's space
      * @param localY y coordinate of a point in Node's space
@@ -4214,9 +4609,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. Note that if this node is in a {@link SubScene}, the result is in the
-     * subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * Note that if this node is in a {@link SubScene}, the result is in the subscene coordinates,
+     * not that of {@link javafx.scene.Scene}.
      * 
      * @param localPoint a point in Node's space
      * @return scene coordinates of the point or null if Node is not in a {@link Window}
@@ -4226,9 +4622,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. Note that if this node is in a {@link SubScene}, the result is in the
-     * subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * Note that if this node is in a {@link SubScene}, the result is in the subscene coordinates,
+     * not that of {@link javafx.scene.Scene}.
      * 
      * @param localPoint a 3D point in Node's space
      * @return the transformed 3D point in Scene's space
@@ -4240,9 +4637,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. Note that if this node is in a {@link SubScene}, the result is in the
-     * subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * Note that if this node is in a {@link SubScene}, the result is in the subscene coordinates,
+     * not that of {@link javafx.scene.Scene}.
      * 
      * @param x the x coordinate of a point in Node's space
      * @param y the y coordinate of a point in Node's space
@@ -4259,15 +4657,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. If the Node does not have any {@link SubScene} or {@code rootScene} is
-     * set to true, the result point is in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #localToScene(javafx.geometry.Point3D)}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * result point is in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #localToScene(javafx.geometry.Point3D)}.
      *
      * @param localPoint the point in local coordinates
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
      * @return transformed point
+     *
      * @see #localToScene(javafx.geometry.Point3D)
      * @since JavaFX 8u40
      */
@@ -4283,17 +4683,19 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. If the Node does not have any {@link SubScene} or {@code rootScene} is
-     * set to true, the result point is in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #localToScene(double, double, double)}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * result point is in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #localToScene(double, double, double)}.
      *
      * @param x the x coordinate of the point in local coordinates
      * @param y the y coordinate of the point in local coordinates
      * @param z the z coordinate of the point in local coordinates
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
      * @return transformed point
+     *
      * @see #localToScene(double, double, double)
      * @since JavaFX 8u40
      */
@@ -4302,15 +4704,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. If the Node does not have any {@link SubScene} or {@code rootScene} is
-     * set to true, the result point is in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #localToScene(javafx.geometry.Point2D)}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * result point is in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #localToScene(javafx.geometry.Point2D)}.
      *
      * @param localPoint the point in local coordinates
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
      * @return transformed point
+     *
      * @see #localToScene(javafx.geometry.Point2D)
      * @since JavaFX 8u40
      */
@@ -4323,16 +4727,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. If the Node does not have any {@link SubScene} or {@code rootScene} is
-     * set to true, the result point is in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #localToScene(double, double)}.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * result point is in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #localToScene(double, double)}.
      *
      * @param x the x coordinate of the point in local coordinates
      * @param y the y coordinate of the point in local coordinates
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
      * @return transformed point
+     *
      * @see #localToScene(double, double)
      * @since JavaFX 8u40
      */
@@ -4341,15 +4747,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a bounds from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. If the Node does not have any {@link SubScene} or {@code rootScene} is
-     * set to true, the result bounds are in {@link Scene} coordinates of the Node returned by
-     * {@link #getScene()}. Otherwise, the subscene coordinates are used, which is equivalent to
-     * calling {@link #localToScene(javafx.geometry.Bounds)}.
+     * Transforms a bounds from the local coordinate space of this {@code Node}
+     * into the coordinate space of its scene.
+     * If the Node does not have any {@link SubScene} or {@code rootScene} is set to true, the
+     * result bounds are in {@link Scene} coordinates of the Node returned by {@link #getScene()}.
+     * Otherwise, the subscene coordinates are used, which is equivalent to calling
+     * {@link #localToScene(javafx.geometry.Bounds)}.
      *
      * @param localBounds the bounds in local coordinates
      * @param rootScene whether Scene coordinates should be used even if the Node is in a SubScene
      * @return transformed bounds
+     *
      * @see #localToScene(javafx.geometry.Bounds)
      * @since JavaFX 8u40
      */
@@ -4369,9 +4777,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a bounds from the local coordinate space of this {@code Node} into the coordinate
-     * space of its scene. Note that if this node is in a {@link SubScene}, the result is in the
-     * subscene coordinates, not that of {@link javafx.scene.Scene}.
+     * Transforms a bounds from the local coordinate space of this
+     * {@code Node} into the coordinate space of its scene.
+     * Note that if this node is in a {@link SubScene}, the result is in the subscene coordinates,
+     * not that of {@link javafx.scene.Scene}.
      * 
      * @param localBounds bounds in Node's space
      * @return the bounds in the scene coordinates or null if Node is not in a {@link Window}
@@ -4402,8 +4811,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the parent into the local coordinate space of
-     * this {@code Node}.
+     * Transforms a point from the coordinate space of the parent into the
+     * local coordinate space of this {@code Node}.
      * 
      * @param parentX the x coordinate in Parent's space
      * @param parentY the y coordinate in Parent's space
@@ -4421,8 +4830,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the parent into the local coordinate space of
-     * this {@code Node}.
+     * Transforms a point from the coordinate space of the parent into the
+     * local coordinate space of this {@code Node}.
      * 
      * @param parentPoint the 2D point in Parent's space
      * @return the transformed 2D point in Node's space
@@ -4432,8 +4841,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the parent into the local coordinate space of
-     * this {@code Node}.
+     * Transforms a point from the coordinate space of the parent into the
+     * local coordinate space of this {@code Node}.
      * 
      * @param parentPoint parentPoint the 3D point in Parent's space
      * @return the transformed 3D point in Node's space
@@ -4444,8 +4853,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the coordinate space of the parent into the local coordinate space of
-     * this {@code Node}.
+     * Transforms a point from the coordinate space of the parent into the
+     * local coordinate space of this {@code Node}.
      * 
      * @param parentX the x coordinate in Parent's space
      * @param parentY the y coordinate in Parent's space
@@ -4465,8 +4874,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a rectangle from the coordinate space of the parent into the local coordinate
-     * space of this {@code Node}.
+     * Transforms a rectangle from the coordinate space of the parent into the
+     * local coordinate space of this {@code Node}.
      * 
      * @param parentBounds the bounds in Parent's space
      * @return the transformed bounds in Node's space
@@ -4495,8 +4904,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its parent.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its parent.
      * 
      * @param localX the x coordinate of the point in Node's space
      * @param localY the y coordinate of the point in Node's space
@@ -4510,8 +4919,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its parent.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its parent.
      * 
      * @param localPoint the 2D point in Node's space
      * @return the transformed 2D point in Parent's space
@@ -4521,8 +4930,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its parent.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its parent.
      * 
      * @param localPoint the 3D point in Node's space
      * @return the transformed 3D point in Parent's space
@@ -4533,8 +4942,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a point from the local coordinate space of this {@code Node} into the coordinate
-     * space of its parent.
+     * Transforms a point from the local coordinate space of this {@code Node}
+     * into the coordinate space of its parent.
      * 
      * @param x the x coordinate of the point in Node's space
      * @param y the y coordinate of the point in Node's space
@@ -4550,8 +4959,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms a bounds from the local coordinate space of this {@code Node} into the coordinate
-     * space of its parent.
+     * Transforms a bounds from the local coordinate space of this
+     * {@code Node} into the coordinate space of its parent.
      * 
      * @param localBounds the bounds in Node's space
      * @return the transformed bounds in Parent's space
@@ -4596,9 +5005,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Invoked whenever the transforms[] ObservableList changes, or by the transforms in that
-     * ObservableList whenever they are changed. Note: This method MUST only be called via its
-     * accessor method.
+     * Invoked whenever the transforms[] ObservableList changes, or by the transforms
+     * in that ObservableList whenever they are changed.
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doTransformsChanged() {
         if (!transformDirty) {
@@ -4626,8 +5035,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This helper function will update the transform matrix on the peer based on the "complete"
-     * transform for this node.
+     * This helper function will update the transform matrix on the peer based
+     * on the "complete" transform for this node.
      */
     void updateLocalToParentTransform() {
         if (transformDirty) {
@@ -4690,8 +5099,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Transforms in place the specified point from parent coords to local coords. Made package
-     * private for the sake of testing.
+     * Transforms in place the specified point from parent coords to local
+     * coords. Made package private for the sake of testing.
      */
     void parentToLocal(com.sun.javafx.geom.Point2D pt) throws NoninvertibleTransformException {
         updateLocalToParentTransform();
@@ -4732,13 +5141,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Mouse event
-     * related APIs * *
+     * *************************************************************************
+     * *
+     * Mouse event related APIs *
+     * *
      **************************************************************************/
 
     /**
-     * Transforms in place the specified point from local coords to parent coords. Made package
-     * private for the sake of testing.
+     * Transforms in place the specified point from local coords to parent
+     * coords. Made package private for the sake of testing.
      */
     void localToParent(com.sun.javafx.geom.Point2D pt) {
         updateLocalToParentTransform();
@@ -4751,17 +5162,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Finds a top-most child node that contains the given local coordinates. The result argument is
-     * used for storing the picking result. Note: This method MUST only be called via its accessor
-     * method.
+     * Finds a top-most child node that contains the given local coordinates.
+     * The result argument is used for storing the picking result.
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doPickNodeLocal(PickRay localPickRay, PickResultChooser result) {
         intersects(localPickRay, result);
     }
 
     /*
-     * Finds a top-most child node that intersects the given ray. The result argument is used for
-     * storing the picking result.
+     * Finds a top-most child node that intersects the given ray.
+     * The result argument is used for storing the picking result.
      */
     final void pickNode(PickRay pickRay, PickResultChooser result) {
 
@@ -4797,13 +5208,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Returns {@code true} if the given ray (start, dir), specified in the local coordinate space
-     * of this {@code Node}, intersects the shape of this {@code Node}. Note that this method does
-     * not take visibility into account; the test is based on the geometry of this {@code Node}
-     * only. <p> The pickResult is updated if the found intersection is closer than the currently
-     * held one. <p> Note that this is a conditional feature. See {@link
-     * javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D} for more
-     * information.
+     * Returns {@code true} if the given ray (start, dir), specified in the
+     * local coordinate space of this {@code Node}, intersects the
+     * shape of this {@code Node}. Note that this method does not take visibility
+     * into account; the test is based on the geometry of this {@code Node} only.
+     * <p>
+     * The pickResult is updated if the found intersection is closer than
+     * the currently held one.
+     * <p>
+     * Note that this is a conditional feature. See
+     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D}
+     * for more information.
      */
     final boolean intersects(PickRay pickRay, PickResultChooser pickResult) {
         double boundsDistance = intersectsBounds(pickRay);
@@ -4821,10 +5236,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Computes the intersection of the pickRay with this node. The pickResult argument is updated
-     * if the found intersection is closer than the passed one. On the other hand, the return value
-     * specifies whether the intersection exists, regardless of its comparison with the given
-     * pickResult.
+     * Computes the intersection of the pickRay with this node.
+     * The pickResult argument is updated if the found intersection
+     * is closer than the passed one. On the other hand, the return value
+     * specifies whether the intersection exists, regardless of its comparison
+     * with the given pickResult.
      */
     private boolean doComputeIntersects(PickRay pickRay, PickResultChooser pickResult) {
         double origZ = pickRay.getOriginNoClone().z;
@@ -4850,11 +5266,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * Computes the intersection of the pickRay with the bounds of this node. The return value is
-     * the distance between the camera and the intersection point, measured in pickRay direction
-     * magnitudes. If there is no intersection, it returns NaN.
+     * Computes the intersection of the pickRay with the bounds of this node.
+     * The return value is the distance between the camera and the intersection
+     * point, measured in pickRay direction magnitudes. If there is
+     * no intersection, it returns NaN.
      * @param pickRay The pick ray
-     * @return Distance of the intersection point, a NaN if there is no intersection
+     * @return Distance of the intersection point, a NaN if there
+     * is no intersection
      */
     final double intersectsBounds(PickRay pickRay) {
 
@@ -5041,32 +5459,40 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * viewOrder
-     * property handling * *
+     * *************************************************************************
+     * *
+     * viewOrder property handling *
+     * *
      **************************************************************************/
 
     /**
-     * Defines the rendering and picking order of this {@code Node} within its parent.
+     * Defines the rendering and picking order of this {@code Node} within its
+     * parent.
      * <p>
-     * This property is used to alter the rendering and picking order of a node within its parent
-     * without reordering the parent's {@code children} list. For example, this can be used as a
-     * more efficient way to implement transparency sorting. To do this, an application can assign
-     * the viewOrder value of each node to the computed distance between that node and the viewer.
+     * This property is used to alter the rendering and picking order of a node
+     * within its parent without reordering the parent's {@code children} list.
+     * For example, this can be used as a more efficient way to implement
+     * transparency sorting. To do this, an application can assign the viewOrder
+     * value of each node to the computed distance between that node and the
+     * viewer.
      * </p>
      * <p>
-     * The parent will traverse its {@code children} in decreasing {@code viewOrder} order. This
-     * means that a child with a lower {@code viewOrder} will be in front of a child with a higher
-     * {@code viewOrder}. If two children have the same {@code viewOrder}, the parent will traverse
-     * them in the order they appear in the parent's {@code children} list.
+     * The parent will traverse its {@code children} in decreasing
+     * {@code viewOrder} order. This means that a child with a lower
+     * {@code viewOrder} will be in front of a child with a higher
+     * {@code viewOrder}. If two children have the same {@code viewOrder}, the
+     * parent will traverse them in the order they appear in the parent's
+     * {@code children} list.
      * </p>
      * <p>
-     * However, {@code viewOrder} does not alter the layout and focus traversal order of this Node
-     * within its parent. A parent always traverses its {@code children} list in order when doing
-     * layout or focus traversal.
+     * However, {@code viewOrder} does not alter the layout and focus traversal
+     * order of this Node within its parent. A parent always traverses its
+     * {@code children} list in order when doing layout or focus traversal.
      * </p>
      *
      * @return the view order for this {@code Node}
      * @defaultValue 0.0
+     *
      * @since 9
      */
     public final DoubleProperty viewOrderProperty() {
@@ -5082,12 +5508,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Transformations *
+     * *************************************************************************
+     * *
+     * Transformations *
      * *
      **************************************************************************/
     /**
-     * The {@code ObservableList} of custom {@link javafx.scene.transform.Transform}s to be applied
-     * to this {@code Node}. These transforms are applied before the predefined transforms.
+     * The {@code ObservableList} of custom {@link javafx.scene.transform.Transform}s
+     * to be applied to this {@code Node}. These transforms are applied before the predefined
+     * transforms.
      * <p>
      * See also the <a href="#Transformations">Transformations</a> section.
      *
@@ -5111,14 +5540,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the x coordinate of the translation that is added to this {@code Node}'s transform.
+     * Defines the x coordinate of the translation that is added to this {@code Node}'s
+     * transform.
      * <p>
      * The node's final translation will be computed as {@link #layoutXProperty layoutX} +
-     * {@code translateX}, where {@code layoutX} establishes the node's stable position and
-     * {@code translateX} optionally makes dynamic adjustments to that position.
+     * {@code translateX},
+     * where {@code layoutX} establishes the node's stable position and {@code translateX}
+     * optionally makes dynamic adjustments to that position.
      * <p>
-     * This variable can be used to alter the location of a node without disturbing its
-     * {@link #layoutBoundsProperty layoutBounds}, which makes it useful for animating a node's
+     * This variable can be used to alter the location of a node without disturbing
+     * its {@link #layoutBoundsProperty layoutBounds}, which makes it useful for animating a node's
      * location.
      *
      * @return the translateX for this {@code Node}
@@ -5137,14 +5568,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the y coordinate of the translation that is added to this {@code Node}'s transform.
+     * Defines the y coordinate of the translation that is added to this {@code Node}'s
+     * transform.
      * <p>
      * The node's final translation will be computed as {@link #layoutYProperty layoutY} +
-     * {@code translateY}, where {@code layoutY} establishes the node's stable position and
-     * {@code translateY} optionally makes dynamic adjustments to that position.
+     * {@code translateY},
+     * where {@code layoutY} establishes the node's stable position and {@code translateY}
+     * optionally makes dynamic adjustments to that position.
      * <p>
-     * This variable can be used to alter the location of a node without disturbing its
-     * {@link #layoutBoundsProperty layoutBounds}, which makes it useful for animating a node's
+     * This variable can be used to alter the location of a node without disturbing
+     * its {@link #layoutBoundsProperty layoutBounds}, which makes it useful for animating a node's
      * location.
      *
      * @return the translateY for this {@code Node}
@@ -5163,16 +5596,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the Z coordinate of the translation that is added to the transformed coordinates of
-     * this {@code Node}. This value will be added to any translation defined by the
-     * {@code transforms} ObservableList and {@code layoutZ}.
+     * Defines the Z coordinate of the translation that is added to the
+     * transformed coordinates of this {@code Node}. This value will be added
+     * to any translation defined by the {@code transforms} ObservableList and
+     * {@code layoutZ}.
      * <p>
-     * This variable can be used to alter the location of a Node without disturbing its layout
-     * bounds, which makes it useful for animating a node's location.
+     * This variable can be used to alter the location of a Node without
+     * disturbing its layout bounds, which makes it useful for animating a
+     * node's location.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D} for more
-     * information.
+     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D}
+     * for more information.
      *
      * @return the translateZ for this {@code Node}
      * @defaultValue 0
@@ -5190,16 +5625,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the factor by which coordinates are scaled about the center of the object along the X
-     * axis of this {@code Node}. This is used to stretch or shrink the node either manually or by
-     * using an animation.
+     * Defines the factor by which coordinates are scaled about the center of the
+     * object along the X axis of this {@code Node}. This is used to stretch or
+     * shrink the node either manually or by using an animation.
      * <p>
-     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by default,
-     * which makes it ideal for scaling the entire node after all effects and transforms have been
-     * taken into account.
+     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by
+     * default, which makes it ideal for scaling the entire node after
+     * all effects and transforms have been taken into account.
      * <p>
-     * The pivot point about which the scale occurs is the center of the untransformed
-     * {@link #layoutBoundsProperty layoutBounds}.
+     * The pivot point about which the scale occurs is the center of the
+     * untransformed {@link #layoutBoundsProperty layoutBounds}.
      *
      * @return the scaleX for this {@code Node}
      * @defaultValue 1.0
@@ -5217,16 +5652,16 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the factor by which coordinates are scaled about the center of the object along the Y
-     * axis of this {@code Node}. This is used to stretch or shrink the node either manually or by
-     * using an animation.
+     * Defines the factor by which coordinates are scaled about the center of the
+     * object along the Y axis of this {@code Node}. This is used to stretch or
+     * shrink the node either manually or by using an animation.
      * <p>
-     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by default,
-     * which makes it ideal for scaling the entire node after all effects and transforms have been
-     * taken into account.
+     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by
+     * default, which makes it ideal for scaling the entire node after
+     * all effects and transforms have been taken into account.
      * <p>
-     * The pivot point about which the scale occurs is the center of the untransformed
-     * {@link #layoutBoundsProperty layoutBounds}.
+     * The pivot point about which the scale occurs is the center of the
+     * untransformed {@link #layoutBoundsProperty layoutBounds}.
      *
      * @return the scaleY for this {@code Node}
      * @defaultValue 1.0
@@ -5244,21 +5679,21 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the factor by which coordinates are scaled about the center of the object along the Z
-     * axis of this {@code Node}. This is used to stretch or shrink the node either manually or by
-     * using an animation.
+     * Defines the factor by which coordinates are scaled about the center of the
+     * object along the Z axis of this {@code Node}. This is used to stretch or
+     * shrink the node either manually or by using an animation.
      * <p>
-     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by default,
-     * which makes it ideal for scaling the entire node after all effects and transforms have been
-     * taken into account.
+     * This scale factor is not included in {@link #layoutBoundsProperty layoutBounds} by
+     * default, which makes it ideal for scaling the entire node after
+     * all effects and transforms have been taken into account.
      * <p>
-     * The pivot point about which the scale occurs is the center of the rectangular bounds formed
-     * by taking {@link #boundsInLocalProperty boundsInLocal} and applying all the transforms in the
-     * {@link #getTransforms transforms} ObservableList.
+     * The pivot point about which the scale occurs is the center of the
+     * rectangular bounds formed by taking {@link #boundsInLocalProperty boundsInLocal} and applying
+     * all the transforms in the {@link #getTransforms transforms} ObservableList.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D} for more
-     * information.
+     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D}
+     * for more information.
      *
      * @return the scaleZ for this {@code Node}
      * @defaultValue 1.0
@@ -5276,24 +5711,27 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines the angle of rotation about the {@code Node}'s center, measured in degrees. This is
-     * used to rotate the {@code Node}.
+     * Defines the angle of rotation about the {@code Node}'s center, measured in
+     * degrees. This is used to rotate the {@code Node}.
      * <p>
      * This rotation factor is not included in {@link #layoutBoundsProperty layoutBounds} by
-     * default, which makes it ideal for rotating the entire node after all effects and transforms
-     * have been taken into account.
+     * default, which makes it ideal for rotating the entire node after
+     * all effects and transforms have been taken into account.
      * <p>
-     * The pivot point about which the rotation occurs is the center of the untransformed
-     * {@link #layoutBoundsProperty layoutBounds}.
+     * The pivot point about which the rotation occurs is the center of the
+     * untransformed {@link #layoutBoundsProperty layoutBounds}.
      * <p>
-     * Note that because the pivot point is computed as the center of this {@code Node}'s layout
-     * bounds, any change to the layout bounds will cause the pivot point to change, which can move
-     * the object. For a leaf node, any change to the geometry will cause the layout bounds to
-     * change. For a group node, any change to any of its children, including a change in a child's
-     * geometry, clip, effect, position, orientation, or scale, will cause the group's layout bounds
-     * to change. If this movement of the pivot point is not desired, applications should instead
-     * use the Node's {@link #getTransforms transforms} ObservableList, and add a
-     * {@link javafx.scene.transform.Rotate} transform, which has a user-specifiable pivot point.
+     * Note that because the pivot point is computed as the center of this
+     * {@code Node}'s layout bounds, any change to the layout bounds will cause
+     * the pivot point to change, which can move the object. For a leaf node,
+     * any change to the geometry will cause the layout bounds to change.
+     * For a group node, any change to any of its children, including a
+     * change in a child's geometry, clip, effect, position, orientation, or
+     * scale, will cause the group's layout bounds to change. If this movement
+     * of the pivot point is not
+     * desired, applications should instead use the Node's {@link #getTransforms transforms}
+     * ObservableList, and add a {@link javafx.scene.transform.Rotate} transform,
+     * which has a user-specifiable pivot point.
      *
      * @return the rotate for this {@code Node}
      * @defaultValue 0.0
@@ -5314,8 +5752,8 @@ public abstract class Node implements EventTarget, Styleable {
      * Defines the axis of rotation of this {@code Node}.
      * <p>
      * Note that this is a conditional feature. See
-     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D} for more
-     * information.
+     * {@link javafx.application.ConditionalFeature#SCENE3D ConditionalFeature.SCENE3D}
+     * for more information.
      *
      * @return the rotationAxis for this {@code Node}
      * @defaultValue Rotate.Z_AXIS
@@ -5325,8 +5763,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * An affine transform that holds the computed local-to-parent transform. This is the
-     * concatenation of all transforms in this node, including all of the convenience transforms.
+     * An affine transform that holds the computed local-to-parent transform.
+     * This is the concatenation of all transforms in this node, including all
+     * of the convenience transforms.
      * 
      * @return the localToParent transform for this {@code Node}
      * @since JavaFX 2.2
@@ -5346,15 +5785,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * An affine transform that holds the computed local-to-scene transform. This is the
-     * concatenation of all transforms in this node's parents and in this node, including all of the
-     * convenience transforms up to the root. If this node is in a {@link javafx.scene.SubScene},
-     * this property represents transforms up to the subscene, not the root scene.
+     * An affine transform that holds the computed local-to-scene transform.
+     * This is the concatenation of all transforms in this node's parents and
+     * in this node, including all of the convenience transforms up to the root.
+     * If this node is in a {@link javafx.scene.SubScene}, this property represents
+     * transforms up to the subscene, not the root scene.
+     *
      * <p>
-     * Note that when you register a listener or a binding to this property, it needs to listen for
-     * invalidation on all its parents to the root node. This means that registering a listener on
-     * this property on many nodes may negatively affect performance of transformation changes in
-     * their common parents.
+     * Note that when you register a listener or a binding to this property,
+     * it needs to listen for invalidation on all its parents to the root node.
+     * This means that registering a listener on this
+     * property on many nodes may negatively affect performance of
+     * transformation changes in their common parents.
      * </p>
      *
      * @return the localToScene transform for this {@code Node}
@@ -5961,13 +6403,15 @@ public abstract class Node implements EventTarget, Styleable {
 
     }
 
-    ////////////////////////////
+    // --------------------------
     // Private Implementation
-    ////////////////////////////
+    // --------------------------
 
     /*
-     * ************************************************************************* * Event Handler
-     * Properties * *
+     * *************************************************************************
+     * *
+     * Event Handler Properties *
+     * *
      **************************************************************************/
 
     private EventHandlerProperties eventHandlerProperties;
@@ -5981,10 +6425,22 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Component
-     * Orientation Properties * *
+     * *************************************************************************
+     * *
+     * Component Orientation Properties *
+     * *
      **************************************************************************/
 
+    /**
+     * Node orientation describes the flow of visual data within a node.
+     * In the English speaking world, visual data normally flows from
+     * left-to-right. In an Arabic or Hebrew world, visual data flows
+     * from right-to-left. This is consistent with the reading order
+     * of text in both worlds.
+     *
+     * @defaultValue {@code NodeOrientation.INHERIT}
+     * @since JavaFX 8.0
+     */
     private ObjectProperty<NodeOrientation> nodeOrientation;
 
     private EffectiveOrientationProperty effectiveNodeOrientationProperty;
@@ -6011,18 +6467,6 @@ public abstract class Node implements EventTarget, Styleable {
         return nodeOrientation == null ? NodeOrientation.INHERIT : nodeOrientation.get();
     }
 
-    /**
-     * Property holding NodeOrientation.
-     * <p>
-     * Node orientation describes the flow of visual data within a node. In the English speaking
-     * world, visual data normally flows from left-to-right. In an Arabic or Hebrew world, visual
-     * data flows from right-to-left. This is consistent with the reading order of text in both
-     * worlds. The default value is left-to-right.
-     * </p>
-     *
-     * @return NodeOrientation
-     * @since JavaFX 8.0
-     */
     public final ObjectProperty<NodeOrientation> nodeOrientationProperty() {
         if (nodeOrientation == null) {
             nodeOrientation = new StyleableObjectProperty<NodeOrientation>(NodeOrientation.INHERIT) {
@@ -6058,8 +6502,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * The effective orientation of a node resolves the inheritance of node orientation, returning
-     * either left-to-right or right-to-left.
+     * The effective orientation of a node resolves the inheritance of
+     * node orientation, returning either left-to-right or right-to-left.
      * 
      * @return the node orientation for this {@code Node}
      * @since JavaFX 8.0
@@ -6073,13 +6517,15 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Determines whether a node should be mirrored when node orientation is right-to-left.
+     * Determines whether a node should be mirrored when node orientation
+     * is right-to-left.
      * <p>
-     * When a node is mirrored, the origin is automatically moved to the top right corner causing
-     * the node to layout children and draw from right to left using a mirroring transformation.
-     * Some nodes may wish to draw from right to left without using a transformation. These nodes
-     * will answer {@code false} and implement right-to-left orientation without using the automatic
-     * transformation.
+     * When a node is mirrored, the origin is automatically moved to the
+     * top right corner causing the node to layout children and draw from
+     * right to left using a mirroring transformation. Some nodes may wish
+     * to draw from right to left without using a transformation. These
+     * nodes will answer {@code false} and implement right-to-left
+     * orientation without using the automatic transformation.
      * </p>
      * 
      * @return true if this {@code Node} should be mirrored
@@ -6238,8 +6684,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Misc Seldom Used
-     * Properties * *
+     * *************************************************************************
+     * *
+     * Misc Seldom Used Properties *
+     * *
      **************************************************************************/
 
     private MiscProperties miscProperties;
@@ -6341,9 +6789,11 @@ public abstract class Node implements EventTarget, Styleable {
             if (boundsInParent == null) {
                 boundsInParent = new LazyBoundsProperty() {
                     /**
-                     * Computes the bounds including the clip, effects, and all transforms. This
-                     * function is essentially how to compute the boundsInParent. Optimizations are
-                     * made to compute as little as possible and create as little trash as possible.
+                     * Computes the bounds including the clip, effects, and all
+                     * transforms. This function is essentially how to compute
+                     * the boundsInParent. Optimizations are made to compute as
+                     * little as possible and create as little trash as
+                     * possible.
                      */
                     @Override
                     protected Bounds computeBounds() {
@@ -6717,7 +7167,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Mouse Handling *
+     * *************************************************************************
+     * *
+     * Mouse Handling *
      * *
      **************************************************************************/
 
@@ -6730,25 +7182,28 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * If {@code true}, this node (together with all its children) is completely transparent to
-     * mouse events. When choosing target for mouse event, nodes with {@code mouseTransparent} set
-     * to {@code true} and their subtrees won't be taken into account.
+     * If {@code true}, this node (together with all its children) is completely
+     * transparent to mouse events. When choosing target for mouse event, nodes
+     * with {@code mouseTransparent} set to {@code true} and their subtrees
+     * won't be taken into account.
      * 
-     * @return is this {@code Node} (together with all its children) is completely transparent to
-     *         mouse events.
+     * @return is this {@code Node} (together with all its children) is completely
+     *         transparent to mouse events.
      */
     public final BooleanProperty mouseTransparentProperty() {
         return getMiscProperties().mouseTransparentProperty();
     }
 
     /**
-     * Whether or not this {@code Node} is being hovered over. Typically this is due to the mouse
-     * being over the node, though it could be due to a pen hovering on a graphics tablet or other
-     * form of input.
+     * Whether or not this {@code Node} is being hovered over. Typically this is
+     * due to the mouse being over the node, though it could be due to a pen
+     * hovering on a graphics tablet or other form of input.
+     *
      * <p>
-     * Note that current implementation of hover relies on mouse enter and exit events to determine
-     * whether this Node is in the hover state; this means that this feature is currently supported
-     * only on systems that have a mouse. Future implementations may provide alternative means of
+     * Note that current implementation of hover relies on mouse enter and
+     * exit events to determine whether this Node is in the hover state; this
+     * means that this feature is currently supported only on systems that
+     * have a mouse. Future implementations may provide alternative means of
      * supporting hover.
      *
      * @defaultValue false
@@ -6795,9 +7250,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Whether or not the {@code Node} is pressed. Typically this is true when the primary mouse
-     * button is down, though subclasses may define other mouse button state or key state to cause
-     * the node to be "pressed".
+     * Whether or not the {@code Node} is pressed. Typically this is true when
+     * the primary mouse button is down, though subclasses may define other
+     * mouse button state or key state to cause the node to be "pressed".
      *
      * @defaultValue false
      */
@@ -6851,10 +7306,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a context menu has been requested on this {@code Node}.
+     * Defines a function to be called when a context menu
+     * has been requested on this {@code Node}.
      * 
-     * @return the event handler that is called when a context menu has been requested on this
-     *         {@code Node}
+     * @return the event handler that is called when a context menu has been
+     *         requested on this {@code Node}
      * @since JavaFX 2.1
      */
     public final ObjectProperty<EventHandler<? super ContextMenuEvent>> onContextMenuRequestedProperty() {
@@ -6870,11 +7326,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a mouse button has been clicked (pressed and released)
-     * on this {@code Node}.
+     * Defines a function to be called when a mouse button has been clicked
+     * (pressed and released) on this {@code Node}.
      * 
-     * @return the event handler that is called when a mouse button has been clicked (pressed and
-     *         released) on this {@code Node}
+     * @return the event handler that is called when a mouse button has been
+     *         clicked (pressed and released) on this {@code Node}
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseClickedProperty() {
         return getEventHandlerProperties().onMouseClickedProperty();
@@ -6889,11 +7345,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a mouse button is pressed on this {@code Node} and then
-     * dragged.
+     * Defines a function to be called when a mouse button is pressed
+     * on this {@code Node} and then dragged.
      * 
-     * @return the event handler that is called when a mouse button is pressed on this {@code Node}
-     *         and then dragged
+     * @return the event handler that is called when a mouse button is pressed
+     *         on this {@code Node} and then dragged
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseDraggedProperty() {
         return getEventHandlerProperties().onMouseDraggedProperty();
@@ -6910,7 +7366,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when the mouse enters this {@code Node}.
      * 
-     * @return the event handler that is called when a mouse enters this {@code Node}
+     * @return the event handler that is called when a mouse enters this
+     *         {@code Node}
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseEnteredProperty() {
         return getEventHandlerProperties().onMouseEnteredProperty();
@@ -6927,7 +7384,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when the mouse exits this {@code Node}.
      * 
-     * @return the event handler that is called when a mouse exits this {@code Node}
+     * @return the event handler that is called when a mouse exits this
+     *         {@code Node}
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseExitedProperty() {
         return getEventHandlerProperties().onMouseExitedProperty();
@@ -6942,11 +7400,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when mouse cursor moves within this {@code Node} but no
-     * buttons have been pushed.
+     * Defines a function to be called when mouse cursor moves within
+     * this {@code Node} but no buttons have been pushed.
      * 
-     * @return the event handler that is called when a mouse cursor moves within this {@code Node}
-     *         but no buttons have been pushed
+     * @return the event handler that is called when a mouse cursor moves
+     *         within this {@code Node} but no buttons have been pushed
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseMovedProperty() {
         return getEventHandlerProperties().onMouseMovedProperty();
@@ -6961,10 +7419,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a mouse button has been pressed on this {@code Node}.
+     * Defines a function to be called when a mouse button
+     * has been pressed on this {@code Node}.
      * 
-     * @return the event handler that is called when a mouse button has been pressed on this
-     *         {@code Node}
+     * @return the event handler that is called when a mouse button has been
+     *         pressed on this {@code Node}
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMousePressedProperty() {
         return getEventHandlerProperties().onMousePressedProperty();
@@ -6979,10 +7438,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a mouse button has been released on this {@code Node}.
+     * Defines a function to be called when a mouse button
+     * has been released on this {@code Node}.
      * 
-     * @return the event handler that is called when a mouse button has been released on this
-     *         {@code Node}
+     * @return the event handler that is called when a mouse button has been
+     *         released on this {@code Node}
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onMouseReleasedProperty() {
         return getEventHandlerProperties().onMouseReleasedProperty();
@@ -6997,10 +7457,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when drag gesture has been detected. This is the right place
-     * to start drag and drop operation.
+     * Defines a function to be called when drag gesture has been
+     * detected. This is the right place to start drag and drop operation.
      * 
-     * @return the event handler that is called when drag gesture has been detected
+     * @return the event handler that is called when drag gesture has been
+     *         detected
      */
     public final ObjectProperty<EventHandler<? super MouseEvent>> onDragDetectedProperty() {
         return getEventHandlerProperties().onDragDetectedProperty();
@@ -7015,11 +7476,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a full press-drag-release gesture progresses within this
-     * {@code Node}.
+     * Defines a function to be called when a full press-drag-release gesture
+     * progresses within this {@code Node}.
      * 
-     * @return the event handler that is called when a full press-drag-release gesture progresses
-     *         within this {@code Node}
+     * @return the event handler that is called when a full press-drag-release
+     *         gesture progresses within this {@code Node}
      * @since JavaFX 2.1
      */
     public final ObjectProperty<EventHandler<? super MouseDragEvent>> onMouseDragOverProperty() {
@@ -7035,11 +7496,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a full press-drag-release gesture ends (by releasing
-     * mouse button) within this {@code Node}.
+     * Defines a function to be called when a full press-drag-release gesture
+     * ends (by releasing mouse button) within this {@code Node}.
      * 
-     * @return the event handler that is called when a full press-drag-release gesture ends (by
-     *         releasing mouse button) within this {@code Node}
+     * @return the event handler that is called when a full press-drag-release
+     *         gesture ends (by releasing mouse button) within this {@code Node}
      * @since JavaFX 2.1
      */
     public final ObjectProperty<EventHandler<? super MouseDragEvent>> onMouseDragReleasedProperty() {
@@ -7055,11 +7516,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a full press-drag-release gesture enters this
-     * {@code Node}.
+     * Defines a function to be called when a full press-drag-release gesture
+     * enters this {@code Node}.
      * 
-     * @return the event handler that is called when a full press-drag-release gesture enters this
-     *         {@code Node}
+     * @return the event handler that is called when a full press-drag-release
+     *         gesture enters this {@code Node}
      * @since JavaFX 2.1
      */
     public final ObjectProperty<EventHandler<? super MouseDragEvent>> onMouseDragEnteredProperty() {
@@ -7075,11 +7536,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a full press-drag-release gesture leaves this
-     * {@code Node}.
+     * Defines a function to be called when a full press-drag-release gesture
+     * leaves this {@code Node}.
      * 
-     * @return the event handler that is called when a full press-drag-release gesture leaves this
-     *         {@code Node}
+     * @return the event handler that is called when a full press-drag-release
+     *         gesture leaves this {@code Node}
      * @since JavaFX 2.1
      */
     public final ObjectProperty<EventHandler<? super MouseDragEvent>> onMouseDragExitedProperty() {
@@ -7087,8 +7548,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Gestures Handling
-     * * *
+     * *************************************************************************
+     * *
+     * Gestures Handling *
+     * *
      **************************************************************************/
 
     public final void setOnScrollStarted(EventHandler<? super ScrollEvent> value) {
@@ -7102,7 +7565,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when a scrolling gesture is detected.
      * 
-     * @return the event handler that is called when a scrolling gesture is detected
+     * @return the event handler that is called when a scrolling gesture is
+     *         detected
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super ScrollEvent>> onScrollStartedProperty() {
@@ -7120,7 +7584,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when user performs a scrolling action.
      * 
-     * @return the event handler that is called when user performs a scrolling action
+     * @return the event handler that is called when user performs a scrolling
+     *         action
      */
     public final ObjectProperty<EventHandler<? super ScrollEvent>> onScrollProperty() {
         return getEventHandlerProperties().onScrollProperty();
@@ -7155,7 +7620,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when a rotation gesture is detected.
      * 
-     * @return the event handler that is called when a rotation gesture is detected
+     * @return the event handler that is called when a rotation gesture is
+     *         detected
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super RotateEvent>> onRotationStartedProperty() {
@@ -7173,7 +7639,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when user performs a rotation action.
      * 
-     * @return the event handler that is called when user performs a rotation action
+     * @return the event handler that is called when user performs a rotation
+     *         action
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super RotateEvent>> onRotateProperty() {
@@ -7209,7 +7676,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when a zooming gesture is detected.
      * 
-     * @return the event handler that is called when a zooming gesture is detected
+     * @return the event handler that is called when a zooming gesture is
+     *         detected
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super ZoomEvent>> onZoomStartedProperty() {
@@ -7227,7 +7695,8 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * Defines a function to be called when user performs a zooming action.
      * 
-     * @return the event handler that is called when user performs a zooming action
+     * @return the event handler that is called when user performs a zooming
+     *         action
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super ZoomEvent>> onZoomProperty() {
@@ -7261,10 +7730,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when an upward swipe gesture centered over this node happens.
+     * Defines a function to be called when an upward swipe gesture
+     * centered over this node happens.
      * 
-     * @return the event handler that is called when an upward swipe gesture centered over this node
-     *         happens
+     * @return the event handler that is called when an upward swipe gesture
+     *         centered over this node happens
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super SwipeEvent>> onSwipeUpProperty() {
@@ -7280,11 +7750,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a downward swipe gesture centered over this node
-     * happens.
+     * Defines a function to be called when a downward swipe gesture
+     * centered over this node happens.
      * 
-     * @return the event handler that is called when a downward swipe gesture centered over this
-     *         node happens
+     * @return the event handler that is called when a downward swipe gesture
+     *         centered over this node happens
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super SwipeEvent>> onSwipeDownProperty() {
@@ -7300,11 +7770,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a leftward swipe gesture centered over this node
-     * happens.
+     * Defines a function to be called when a leftward swipe gesture
+     * centered over this node happens.
      * 
-     * @return the event handler that is called when a leftward swipe gesture centered over this
-     *         node happens
+     * @return the event handler that is called when a leftward swipe gesture
+     *         centered over this node happens
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super SwipeEvent>> onSwipeLeftProperty() {
@@ -7320,11 +7790,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when an rightward swipe gesture centered over this node
-     * happens.
+     * Defines a function to be called when an rightward swipe gesture
+     * centered over this node happens.
      * 
-     * @return the event handler that is called when an rightward swipe gesture centered over this
-     *         node happens
+     * @return the event handler that is called when an rightward swipe gesture
+     *         centered over this node happens
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super SwipeEvent>> onSwipeRightProperty() {
@@ -7332,7 +7802,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Touch Handling *
+     * *************************************************************************
+     * *
+     * Touch Handling *
      * *
      **************************************************************************/
 
@@ -7399,9 +7871,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when a touch point stays pressed and still.
+     * Defines a function to be called when a touch point stays pressed and
+     * still.
      * 
-     * @return the event handler that is called when a touch point stays pressed and still
+     * @return the event handler that is called when a touch point stays pressed
+     *         and still
      * @since JavaFX 2.2
      */
     public final ObjectProperty<EventHandler<? super TouchEvent>> onTouchStationaryProperty() {
@@ -7409,8 +7883,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Keyboard Handling
-     * * *
+     * *************************************************************************
+     * *
+     * Keyboard Handling *
+     * *
      **************************************************************************/
 
     public final void setOnKeyPressed(EventHandler<? super KeyEvent> value) {
@@ -7422,12 +7898,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when this {@code Node} or its child {@code Node} has input
-     * focus and a key has been pressed. The function is called only if the event hasn't been
-     * already consumed during its capturing or bubbling phase.
+     * Defines a function to be called when this {@code Node} or its child
+     * {@code Node} has input focus and a key has been pressed. The function
+     * is called only if the event hasn't been already consumed during its
+     * capturing or bubbling phase.
      * 
-     * @return the event handler that is called when this {@code Node} or its child {@code Node} has
-     *         input focus and a key has been pressed
+     * @return the event handler that is called when this {@code Node} or its
+     *         child {@code Node} has input focus and a key has been pressed
      */
     public final ObjectProperty<EventHandler<? super KeyEvent>> onKeyPressedProperty() {
         return getEventHandlerProperties().onKeyPressedProperty();
@@ -7442,12 +7919,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when this {@code Node} or its child {@code Node} has input
-     * focus and a key has been released. The function is called only if the event hasn't been
-     * already consumed during its capturing or bubbling phase.
+     * Defines a function to be called when this {@code Node} or its child
+     * {@code Node} has input focus and a key has been released. The function
+     * is called only if the event hasn't been already consumed during its
+     * capturing or bubbling phase.
      * 
-     * @return the event handler that is called when this {@code Node} or its child {@code Node} has
-     *         input focus and a key has been released
+     * @return the event handler that is called when this {@code Node} or its
+     *         child {@code Node} has input focus and a key has been released
      */
     public final ObjectProperty<EventHandler<? super KeyEvent>> onKeyReleasedProperty() {
         return getEventHandlerProperties().onKeyReleasedProperty();
@@ -7462,20 +7940,23 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when this {@code Node} or its child {@code Node} has input
-     * focus and a key has been typed. The function is called only if the event hasn't been already
-     * consumed during its capturing or bubbling phase.
+     * Defines a function to be called when this {@code Node} or its child
+     * {@code Node} has input focus and a key has been typed. The function
+     * is called only if the event hasn't been already consumed during its
+     * capturing or bubbling phase.
      * 
-     * @return the event handler that is called when this {@code Node} or its child {@code Node} has
-     *         input focus and a key has been typed
+     * @return the event handler that is called when this {@code Node} or its
+     *         child {@code Node} has input focus and a key has been typed
      */
     public final ObjectProperty<EventHandler<? super KeyEvent>> onKeyTypedProperty() {
         return getEventHandlerProperties().onKeyTypedProperty();
     }
 
     /*
-     * ************************************************************************* * Input Method
-     * Handling * *
+     * *************************************************************************
+     * *
+     * Input Method Handling *
+     * *
      **************************************************************************/
 
     public final void setOnInputMethodTextChanged(EventHandler<? super InputMethodEvent> value) {
@@ -7487,17 +7968,18 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Defines a function to be called when this {@code Node} has input focus and the input method
-     * text has changed. If this function is not defined in this {@code Node}, then it receives the
-     * result string of the input method composition as a series of {@code onKeyTyped} function
-     * calls.
+     * Defines a function to be called when this {@code Node}
+     * has input focus and the input method text has changed. If this
+     * function is not defined in this {@code Node}, then it
+     * receives the result string of the input method composition as a
+     * series of {@code onKeyTyped} function calls.
      * <p>
-     * When the {@code Node} loses the input focus, the JavaFX runtime automatically commits the
-     * existing composed text if any.
+     * When the {@code Node} loses the input focus, the JavaFX runtime
+     * automatically commits the existing composed text if any.
      * </p>
      * 
-     * @return the event handler that is called when this {@code Node} has input focus and the input
-     *         method text has changed
+     * @return the event handler that is called when this {@code Node} has input
+     *         focus and the input method text has changed
      */
     public final ObjectProperty<EventHandler<? super InputMethodEvent>> onInputMethodTextChangedProperty() {
         return getEventHandlerProperties().onInputMethodTextChangedProperty();
@@ -7521,19 +8003,23 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Focus Traversal *
+     * *************************************************************************
+     * *
+     * Focus Traversal *
      * *
      **************************************************************************/
 
     /**
-     * Special boolean property which allows for atomic focus change. Focus change means defocusing
-     * the old focus owner and focusing a new one. With a usual property, defocusing the old node
-     * fires the value changed event and user code can react with something that breaks focusability
-     * of the new node, or even remove the new node from the scene. This leads to various error
-     * states. This property allows for setting the state without firing the event. The focus change
-     * first sets both properties and then fires both events. This makes the focus change look like
-     * an atomic operation - when the old node is notified to loose focus, the new node is already
-     * focused.
+     * Special boolean property which allows for atomic focus change.
+     * Focus change means defocusing the old focus owner and focusing a new
+     * one. With a usual property, defocusing the old node fires the value
+     * changed event and user code can react with something that breaks
+     * focusability of the new node, or even remove the new node from the scene.
+     * This leads to various error states. This property allows for setting
+     * the state without firing the event. The focus change first sets both
+     * properties and then fires both events. This makes the focus change look
+     * like an atomic operation - when the old node is notified to loose focus,
+     * the new node is already focused.
      */
     abstract class FocusPropertyBase extends ReadOnlyBooleanPropertyBase {
         private boolean value;
@@ -7574,16 +8060,11 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /**
-     * .
-     */
     final void setFocusQuietly(boolean focused, boolean focusVisible) {
         this.focused.set(focused);
         this.focusVisible.set(focused && focusVisible);
     }
 
-    /**
-     */
     final void notifyFocusListeners() {
         focused.notifyListeners();
         focusVisible.notifyListeners();
@@ -7596,12 +8077,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Called when the current node was removed from or added to the scene graph. If the current
-     * node has the focusWithin bit, we also need to clear and set the focusWithin bits of this
+     * Called when the current node was removed from or added to the scene graph.
+     * If the current node has the focusWithin bit, we also need to clear and set the focusWithin
+     * bits of this
      * node's old and new parents. Note that a scene graph can have more than a single focused node,
-     * for example when a PopupWindow is used to present a branch of the scene graph. Since we need
-     * to preserve multi-level focus, we need to adjust the focus-within count on all parents of the
-     * node.
+     * for example
+     * when a PopupWindow is used to present a branch of the scene graph. Since we need to preserve
+     * multi-level
+     * focus, we need to adjust the focus-within count on all parents of the node.
      */
     private void updateParentsFocusWithin(Node oldParent, Node newParent) {
         if (!focusWithin.get()) {
@@ -7632,9 +8115,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether this {@code Node} currently has the input focus. To have the input focus, a
-     * node must be the {@code Scene}'s focus owner, and the scene must be in a {@code Stage} that
-     * is visible and active. See {@link #requestFocus()} for more information.
+     * Indicates whether this {@code Node} currently has the input focus.
+     * To have the input focus, a node must be the {@code Scene}'s focus
+     * owner, and the scene must be in a {@code Stage} that is visible
+     * and active. See {@link #requestFocus()} for more information.
      *
      * @see #requestFocus()
      * @defaultValue false
@@ -7689,9 +8173,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether this {@code Node} should visibly indicate focus. This flag is set when the
-     * node acquires input focus via keyboard navigation, and it is cleared when the node loses
-     * focus or when {@link #requestFocus()} is called.
+     * Indicates whether this {@code Node} should visibly indicate focus.
+     * This flag is set when the node acquires input focus via keyboard navigation,
+     * and it is cleared when the node loses focus or when {@link #requestFocus()}
+     * is called.
      *
      * @defaultValue false
      * @since 19
@@ -7717,7 +8202,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Indicates whether this {@code Node} or any of its descendants currently has the input focus.
+     * Indicates whether this {@code Node} or any of its descendants currently
+     * has the input focus.
      *
      * @defaultValue false
      * @since 19
@@ -7755,13 +8241,17 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Specifies whether this {@code Node} should be a part of focus traversal cycle. When this
-     * property is {@code true} focus can be moved to this {@code Node} and from this {@code Node}
-     * using regular focus traversal keys. On a desktop such keys are usually {@code TAB} for moving
-     * focus forward and {@code SHIFT+TAB} for moving focus backward. When a {@code Scene} is
-     * created, the system gives focus to a {@code Node} whose {@code focusTraversable} variable is
-     * true and that is eligible to receive the focus, unless the focus had been set explicitly via
-     * a call to {@link #requestFocus()}.
+     * Specifies whether this {@code Node} should be a part of focus traversal
+     * cycle. When this property is {@code true} focus can be moved to this
+     * {@code Node} and from this {@code Node} using regular focus traversal
+     * keys. On a desktop such keys are usually {@code TAB} for moving focus
+     * forward and {@code SHIFT+TAB} for moving focus backward.
+     *
+     * When a {@code Scene} is created, the system gives focus to a
+     * {@code Node} whose {@code focusTraversable} variable is true
+     * and that is eligible to receive the focus,
+     * unless the focus had been set explicitly via a call
+     * to {@link #requestFocus()}.
      *
      * @see #requestFocus()
      * @defaultValue false
@@ -7811,12 +8301,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Called when something has changed on this node that *may* have made the scene's focus dirty.
-     * This covers the cases where this node is the focus owner and it may have lost eligibility, or
-     * it's traversable and it may have gained eligibility. Note that we do not want to use disabled
-     * or treeVisible here, as this function is called from their "on invalidate" triggers, and
-     * using them will cause them to be revalidated. The pulse will revalidate everything and make
-     * the final determination.
+     * Called when something has changed on this node that *may* have made the
+     * scene's focus dirty. This covers the cases where this node is the focus
+     * owner and it may have lost eligibility, or it's traversable and it may
+     * have gained eligibility. Note that we do not want to use disabled
+     * or treeVisible here, as this function is called from their
+     * "on invalidate" triggers, and using them will cause them to be
+     * revalidated. The pulse will revalidate everything and make the final
+     * determination.
      */
     private void focusSetDirty(Scene s) {
         if (s != null && (this == s.getFocusOwner() || isFocusTraversable())) {
@@ -7825,12 +8317,14 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Requests that this {@code Node} get the input focus, and that this {@code Node}'s top-level
-     * ancestor become the focused window. To be eligible to receive the focus, the node must be
-     * part of a scene, it and all of its ancestors must be visible, and it must not be disabled. If
-     * this node is eligible, this function will cause it to become this {@code Scene}'s "focus
-     * owner". Each scene has at most one focus owner node. The focus owner will not actually have
-     * the input focus, however, unless the scene belongs to a {@code Stage} that is both visible
+     * Requests that this {@code Node} get the input focus, and that this
+     * {@code Node}'s top-level ancestor become the focused window. To be
+     * eligible to receive the focus, the node must be part of a scene, it and
+     * all of its ancestors must be visible, and it must not be disabled.
+     * If this node is eligible, this function will cause it to become this
+     * {@code Scene}'s "focus owner". Each scene has at most one focus owner
+     * node. The focus owner will not actually have the input focus, however,
+     * unless the scene belongs to a {@code Stage} that is both visible
      * and active.
      * <p>
      * This method will clear the {@link #focusVisible} flag.
@@ -7842,8 +8336,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Requests focus as if by calling {@link #requestFocus()}, and additionally sets the
-     * {@link #focusVisible} flag.
+     * Requests focus as if by calling {@link #requestFocus()}, and additionally
+     * sets the {@link #focusVisible} flag.
      */
     private void requestFocusVisible() {
         if (getScene() != null) {
@@ -7852,9 +8346,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Traverses from this node in the direction indicated. Note that this node need not actually
-     * have the focus, nor need it be focusTraversable. However, the node must be part of a scene,
-     * otherwise this request is ignored.
+     * Traverses from this node in the direction indicated. Note that this
+     * node need not actually have the focus, nor need it be focusTraversable.
+     * However, the node must be part of a scene, otherwise this request
+     * is ignored.
      */
     final boolean traverse(Direction dir, TraversalMethod method) {
         if (getScene() == null) {
@@ -7863,9 +8358,9 @@ public abstract class Node implements EventTarget, Styleable {
         return getScene().traverse(this, dir, method);
     }
 
-    ////////////////////////////
+    // --------------------------
     // Private Implementation
-    ////////////////////////////
+    // --------------------------
 
     /**
      * Returns a string representation for the object.
@@ -7982,6 +8477,12 @@ public abstract class Node implements EventTarget, Styleable {
     final void setTreeVisible(boolean value) {
         if (treeVisible != value) {
             treeVisible = value;
+            if (!value) {
+                // When this node is removed from the scene graph or becomes invisible, we complete
+                // all running transitions for this node. This ensures that a node is not affected
+                // by a transition when it is no longer useful.
+                completeTransitionTimers();
+            }
             updateCanReceiveFocus();
             focusSetDirty(getScene());
             if (getClip() != null) {
@@ -8110,21 +8611,24 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * References a node that is a labelFor this node. Accessible via a NodeAccessor. See
-     * Label.labelFor for details.
+     * References a node that is a labelFor this node.
+     * Accessible via a NodeAccessor. See Label.labelFor for details.
      */
     private Node labeledBy = null;
 
     /*
-     * ************************************************************************* * Event Dispatch *
+     * *************************************************************************
+     * *
+     * Event Dispatch *
      * *
      **************************************************************************/
 
     // PENDING_DOC_REVIEW
     /**
-     * Specifies the event dispatcher for this node. The default event dispatcher sends the received
-     * events to the registered event handlers and filters. When replacing the value with a new
-     * {@code EventDispatcher}, the new dispatcher should forward events to the replaced dispatcher
+     * Specifies the event dispatcher for this node. The default event
+     * dispatcher sends the received events to the registered event handlers and
+     * filters. When replacing the value with a new {@code EventDispatcher},
+     * the new dispatcher should forward events to the replaced dispatcher
      * to maintain the node's default event handling behavior.
      */
     private ObjectProperty<EventDispatcher> eventDispatcher;
@@ -8165,10 +8669,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Sets the handler to use for this event type. There can only be one such handler specified at
-     * a time. This handler is guaranteed to be called as the last, after handlers added using
-     * {@link #addEventHandler(javafx.event.EventType, javafx.event.EventHandler)}. This is used for
-     * registering the user-defined onFoo event handlers.
+     * Sets the handler to use for this event type. There can only be one such handler
+     * specified at a time. This handler is guaranteed to be called as the last, after
+     * handlers added using
+     * {@link #addEventHandler(javafx.event.EventType, javafx.event.EventHandler)}.
+     * This is used for registering the user-defined onFoo event handlers.
      *
      * @param <T> the specific event class of the handler
      * @param eventType the event type to associate with the given eventHandler
@@ -8239,11 +8744,13 @@ public abstract class Node implements EventTarget, Styleable {
 
     // PENDING_DOC_REVIEW
     /**
-     * Fires the specified event. By default the event will travel through the hierarchy from the
-     * stage to this node. Any event filter encountered will be notified and can consume the event.
-     * If not consumed by the filters, the event handlers on this node are notified. If these don't
-     * consume the event either, the event will travel back the same path it arrived to this node.
-     * All event handlers encountered are called and can consume the event.
+     * Fires the specified event. By default the event will travel through the
+     * hierarchy from the stage to this node. Any event filter encountered will
+     * be notified and can consume the event. If not consumed by the filters,
+     * the event handlers on this node are notified. If these don't consume the
+     * event either, the event will travel back the same path it arrived to
+     * this node. All event handlers encountered are called and can consume the
+     * event.
      * <p>
      * This method must be called on the FX user thread.
      *
@@ -8252,8 +8759,8 @@ public abstract class Node implements EventTarget, Styleable {
     public final void fireEvent(Event event) {
 
         /*
-         * Log input events. We do a coarse filter for at least the FINE level and then granularize
-         * from there.
+         * Log input events. We do a coarse filter for at least the FINE
+         * level and then granularize from there.
          */
         if (event instanceof InputEvent) {
             PlatformLogger logger = Logging.getInputLogger();
@@ -8273,8 +8780,194 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * ************************************************************************* * Stylesheet
-     * Handling * *
+     * *************************************************************************
+     * *
+     * CSS Transitions *
+     * *
+     **************************************************************************/
+
+    private List<TransitionTimer> transitionTimers;
+
+    /**
+     * Called by animatable {@link StyleableProperty} implementations in order to register
+     * a running {@link TransitionTimer} with this {@code Node}. This allows the node
+     * to keep track of running timers that are targeting its properties.
+     *
+     * @param timer the transition timer
+     */
+    private void addTransitionTimer(TransitionTimer timer) {
+        if (transitionTimers == null) {
+            transitionTimers = new ArrayList<>(4);
+        }
+
+        transitionTimers.add(timer);
+    }
+
+    /**
+     * Removes a timer that was previously registered with {@link #addTransitionTimer}.
+     * This method is called by animatable {@link StyleableProperty} implementations
+     * when their {@link TransitionTimer} has completed.
+     *
+     * @param timer the transition timer
+     */
+    private void removeTransitionTimer(TransitionTimer timer) {
+        if (transitionTimers != null) {
+            transitionTimers.remove(timer);
+        }
+    }
+
+    /**
+     * Finds the transition timer that targets the specified {@code property}.
+     *
+     * @param property the targeted property
+     * @return the transition timer, or {@code null} if the property is not
+     *         targeted by a transition timer
+     */
+    private TransitionTimer findTransitionTimer(Property<?> property) {
+        if (transitionTimers == null) {
+            return null;
+        }
+
+        for (int i = 0, max = transitionTimers.size(); i < max; ++i) {
+            TransitionTimer timer = transitionTimers.get(i);
+
+            // We use an identity comparison here because we're looking for the exact property
+            // instance that was targeted by the transition timer on this node.
+            if (timer.getTargetProperty() == property) {
+                return timer;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Completes all running timers, which skips the rest of their animation and sets
+     * the property to the target value.
+     */
+    // package-private for testing
+    void completeTransitionTimers() {
+        if (transitionTimers == null || transitionTimers.isEmpty()) {
+            return;
+        }
+
+        // Make a copy of the list, because completing the timers causes them to be removed
+        // from the list, which would result in a ConcurrentModificationException.
+        for (TransitionTimer timer : List.copyOf(transitionTimers)) {
+            timer.complete();
+        }
+    }
+
+    // package-private for testing
+    List<TransitionTimer> getTransitionTimers() {
+        return transitionTimers;
+    }
+
+    /**
+     * Contains descriptions of the animated transitions that are currently defined for
+     * properties of this {@code Node}.
+     * <p>
+     * All property transitions are implicit, which means they are started automatically by
+     * the CSS subsystem when a property value is changed. Explicit property changes, such as
+     * by calling {@link Property#setValue(Object)}, do not trigger an animated transition.
+     */
+    private class TransitionDefinitionCollection extends ArrayList<TransitionDefinition>
+            implements StyleableProperty<TransitionDefinition[]> {
+        private StyleOrigin origin;
+
+        /**
+         * Returns the transition for the property referenced by the specified CSS metadata,
+         * or {@code null} if no transition was found.
+         *
+         * @param metadata the CSS metadata of the property
+         * @return the {@code TransitionDefinition} specified for the property referenced by the
+         *         CSS metadata, {@code null} otherwise
+         */
+        TransitionDefinition find(CssMetaData<? extends Styleable, ?> metadata) {
+            int size = size();
+            if (size == 0) {
+                return null;
+            }
+
+            // We look for a matching transition in reverse, since multiple transitions might be
+            // specified
+            // for the same property. In this case, the last transition takes precedence.
+            for (int i = size - 1; i >= 0; --i) {
+                TransitionDefinition transition = get(i);
+
+                boolean selected = TransitionDefinitionConverter.PROPERTY_ALL.equals(transition.propertyName()) || metadata.getProperty()
+                        .equals(transition.propertyName());
+
+                if (selected) {
+                    return transition;
+                }
+            }
+
+            List<CssMetaData<? extends Styleable, ?>> subMetadata = metadata.getSubProperties();
+            if (subMetadata == null) {
+                return null;
+            }
+
+            // We also need to search for matching sub-properties, since a transition might be
+            // defined
+            // for a sub-property (for example, '-fx-background-color') but must be applied to the
+            // base
+            // property (-fx-background).
+            for (int i = 0, max = subMetadata.size(); i < max; ++i) {
+                TransitionDefinition transition = find(subMetadata.get(i));
+                if (transition != null) {
+                    return transition;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public TransitionDefinition[] getValue() {
+            return toArray(TransitionDefinition[]::new);
+        }
+
+        @Override
+        public void setValue(TransitionDefinition[] value) {
+            clear();
+            addAll(Arrays.asList(value));
+            this.origin = StyleOrigin.USER;
+        }
+
+        @Override
+        public void applyStyle(StyleOrigin origin, TransitionDefinition[] value) {
+            setValue(value);
+            this.origin = origin;
+        }
+
+        @Override
+        public StyleOrigin getStyleOrigin() {
+            return origin;
+        }
+
+        @Override
+        public CssMetaData<? extends Styleable, TransitionDefinition[]> getCssMetaData() {
+            return TransitionDefinitionCssMetaData.getInstance();
+        }
+    }
+
+    private TransitionDefinitionCollection transitions;
+
+    // package-private for testing
+    List<TransitionDefinition> getTransitionDefinitions() {
+        if (transitions == null) {
+            transitions = new TransitionDefinitionCollection();
+        }
+
+        return transitions;
+    }
+
+    /*
+     * *************************************************************************
+     * *
+     * Stylesheet Handling *
+     * *
      **************************************************************************/
 
     /**
@@ -8313,10 +9006,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the initial focus traversable state of this node, for use by the JavaFX CSS engine to
-     * correctly set its initial value. This method can be overridden by subclasses in instances
-     * where focus traversable should initially be true (as the default implementation of this
-     * method is to return false).
+     * Returns the initial focus traversable state of this node, for use
+     * by the JavaFX CSS engine to correctly set its initial value. This method
+     * can be overridden by subclasses in instances where focus traversable should
+     * initially be true (as the default implementation of this method is to return
+     * false).
      *
      * @return the initial focus traversable state for this {@code Node}.
      * @since 9
@@ -8326,10 +9020,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Returns the initial cursor state of this node, for use by the JavaFX CSS engine to correctly
-     * set its initial value. This method can be overridden by subclasses in instances where the
-     * cursor should initially be non-null (as the default implementation of this method is to
-     * return null).
+     * Returns the initial cursor state of this node, for use
+     * by the JavaFX CSS engine to correctly set its initial value. This method
+     * can be overridden by subclasses in instances where the cursor should
+     * initially be non-null (as the default implementation of this method is to return
+     * null).
      *
      * @return the initial cursor state for this {@code Node}.
      * @since 9
@@ -8615,11 +9310,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This method should delegate to {@link Node#getClassCssMetaData()} so that a Node's
-     * CssMetaData can be accessed without the need for reflection.
+     * This method should delegate to {@link Node#getClassCssMetaData()} so that
+     * a Node's CssMetaData can be accessed without the need for reflection.
      *
-     * @return The CssMetaData associated with this node, which may include the CssMetaData of its
-     *         superclasses.
+     * @return The CssMetaData associated with this node, which may include the
+     *         CssMetaData of its superclasses.
      * @since JavaFX 8.0
      */
 
@@ -8629,8 +9324,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * @return The Styles that match this CSS property for the given Node. The list is sorted by
-     * descending specificity.
+     * @return The Styles that match this CSS property for the given Node. The
+     * list is sorted by descending specificity.
      */
     // SB-dependency: RT-21096 has been filed to track this
     static List<Style> getMatchingStyles(CssMetaData cssMetaData, Styleable styleable) {
@@ -8661,10 +9356,12 @@ public abstract class Node implements EventTarget, Styleable {
 
     /*
      * Find CSS styles that were used to style this Node in its current pseudo-class state. The map
-     * will contain the styles from this node and, if the node is a Parent, its children. The node
-     * corresponding to an entry in the Map can be obtained by casting a StyleableProperty key to a
+     * will contain the styles from this node and,
+     * if the node is a Parent, its children. The node corresponding to an entry in the Map can be
+     * obtained by casting a StyleableProperty key to a
      * javafx.beans.property.Property and calling getBean(). The List contains only those styles
-     * used to style the property and will contain styles used to resolve lookup values.
+     * used to style the property and will contain
+     * styles used to resolve lookup values.
      * @param styleMap A Map to be populated with the styles. If null, a new Map will be allocated.
      * @return The Map populated with matching styles.
      */
@@ -8676,8 +9373,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Flags used to indicate in which way this node is dirty (or whether it is clean) and what must
-     * happen during the next CSS cycle on the scenegraph.
+     * Flags used to indicate in which way this node is dirty (or whether it
+     * is clean) and what must happen during the next CSS cycle on the
+     * scenegraph.
      */
     CssFlags cssFlag = CssFlags.CLEAN;
 
@@ -8705,10 +9403,11 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * Used to specify that a pseudo-class of this Node has changed. If the pseudo-class is used in
-     * a CSS selector that matches this Node, CSS will be reapplied. Typically, this method is
-     * called from the {@code invalidated} method of a property that is used as a pseudo-class. For
-     * example: <pre><code>
+     * Used to specify that a pseudo-class of this Node has changed. If the
+     * pseudo-class is used in a CSS selector that matches this Node, CSS will
+     * be reapplied. Typically, this method is called from the {@code invalidated}
+     * method of a property that is used as a pseudo-class. For example:
+     * <pre><code>
      *
      *     private static final PseudoClass MY_PSEUDO_CLASS_STATE = PseudoClass.getPseudoClass("my-state");
      *
@@ -8937,19 +9636,24 @@ public abstract class Node implements EventTarget, Styleable {
 
     /**
      * If required, apply styles to this Node and its children, if any. This method does not
-     * normally need to be invoked directly but may be used in conjunction with
-     * {@link Parent#layout()} to size a Node before the next pulse, or if the {@link #getScene()
-     * Scene} is not in a {@link javafx.stage.Stage}.
+     * normally need to
+     * be invoked directly but may be used in conjunction with {@link Parent#layout()} to size a
+     * Node before the
+     * next pulse, or if the {@link #getScene() Scene} is not in a {@link javafx.stage.Stage}.
      * <p>
      * Provided that the Node&#39;s {@link #getScene() Scene} is not null, CSS is applied to this
-     * Node regardless of whether this Node&#39;s CSS state is clean. CSS styles are applied from
-     * the top-most parent of this Node whose CSS state is other than clean, which may affect the
-     * styling of other nodes. This method is a no-op if the Node is not in a Scene. The Scene does
-     * not have to be in a Stage.
+     * Node regardless
+     * of whether this Node&#39;s CSS state is clean. CSS styles are applied from the top-most
+     * parent
+     * of this Node whose CSS state is other than clean, which may affect the styling of other
+     * nodes.
+     * This method is a no-op if the Node is not in a Scene. The Scene does not have to be in a
+     * Stage.
      * </p>
      * <p>
      * This method does not invoke the {@link Parent#layout()} method. Typically, the caller will
-     * use the following sequence of operations.
+     * use the
+     * following sequence of operations.
      * </p>
      * <pre>{@code
      *     parentNode.applyCss();
@@ -8957,10 +9661,12 @@ public abstract class Node implements EventTarget, Styleable {
      * }</pre>
      * <p>
      * As a more complete example, the following code uses {@code applyCss()} and {@code layout()}
-     * to find the width and height of the Button before the Stage has been shown. If either the
-     * call to {@code applyCss()} or the call to {@code layout()} is commented out, the calls to
-     * {@code getWidth()} and {@code getHeight()} will return zero (until some time after the Stage
-     * is shown).
+     * to find
+     * the width and height of the Button before the Stage has been shown. If either the call to
+     * {@code applyCss()}
+     * or the call to {@code layout()} is commented out, the calls to {@code getWidth()} and
+     * {@code getHeight()}
+     * will return zero (until some time after the Stage is shown).
      * </p>
      * <pre><code>
      * {@literal @}Override
@@ -9034,11 +9740,15 @@ public abstract class Node implements EventTarget, Styleable {
 
     /*
      * If invoked, will update styles from here on down. This method should not be called directly.
-     * If overridden, the overriding method must at some point call {@code super.processCSSImpl} to
-     * ensure that this Node's CSS state is properly updated. Note that the difference between this
-     * method and {@link #applyCss()} is that this method updates styles for this node on down;
-     * whereas, {@code applyCss()} looks for the top-most ancestor that needs CSS update and apply
-     * styles from that node on down. Note: This method MUST only be called via its accessor method.
+     * If
+     * overridden, the overriding method must at some point call {@code super.processCSSImpl} to
+     * ensure that
+     * this Node's CSS state is properly updated.
+     * Note that the difference between this method and {@link #applyCss()} is that this method
+     * updates styles for this node on down; whereas, {@code applyCss()} looks for the top-most
+     * ancestor that needs
+     * CSS update and apply styles from that node on down.
+     * Note: This method MUST only be called via its accessor method.
      */
     private void doProcessCSS() {
 
@@ -9061,8 +9771,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A StyleHelper for this node. A StyleHelper contains all the css styles for this node and
-     * knows how to apply them when our state changes.
+     * A StyleHelper for this node.
+     * A StyleHelper contains all the css styles for this node
+     * and knows how to apply them when our state changes.
      */
     CssStyleHelper styleHelper;
 
@@ -9161,11 +9872,12 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * The accessible role for this {@code Node}.
      * <p>
-     * The screen reader uses the role of a node to determine the attributes and actions that are
-     * supported.
+     * The screen reader uses the role of a node to determine the
+     * attributes and actions that are supported.
      *
      * @defaultValue {@link AccessibleRole#NODE}
      * @see AccessibleRole
+     *
      * @since JavaFX 8u40
      */
     private ObjectProperty<AccessibleRole> accessibleRole;
@@ -9200,13 +9912,16 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * The role description of this {@code Node}.
      * <p>
-     * Normally, when a role is provided for a node, the screen reader speaks the role as well as
-     * the contents of the node. When this value is set, it is possible to override the default.
-     * This is useful because the set of roles is predefined. For example, it is possible to set the
-     * role of a node to be a button, but have the role description be arbitrary text.
+     * Normally, when a role is provided for a node, the screen reader
+     * speaks the role as well as the contents of the node. When this
+     * value is set, it is possible to override the default. This is
+     * useful because the set of roles is predefined. For example,
+     * it is possible to set the role of a node to be a button, but
+     * have the role description be arbitrary text.
      *
      * @return the role description of this {@code Node}.
      * @defaultValue null
+     *
      * @since JavaFX 8u40
      */
     public final ObjectProperty<String> accessibleRoleDescriptionProperty() {
@@ -9226,12 +9941,15 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * The accessible text for this {@code Node}.
      * <p>
-     * This property is used to set the text that the screen reader will speak. If a node normally
-     * speaks text, that text is overriden. For example, a button usually speaks using the text in
-     * the control but will no longer do this when this value is set.
+     * This property is used to set the text that the screen
+     * reader will speak. If a node normally speaks text,
+     * that text is overriden. For example, a button
+     * usually speaks using the text in the control but will
+     * no longer do this when this value is set.
      *
      * @return accessible text for this {@code Node}.
      * @defaultValue null
+     *
      * @since JavaFX 8u40
      */
     public final ObjectProperty<String> accessibleTextProperty() {
@@ -9251,11 +9969,13 @@ public abstract class Node implements EventTarget, Styleable {
     /**
      * The accessible help text for this {@code Node}.
      * <p>
-     * The help text provides a more detailed description of the accessible text for a node. By
-     * default, if the node has a tool tip, this text is used.
+     * The help text provides a more detailed description of the
+     * accessible text for a node. By default, if the node has
+     * a tool tip, this text is used.
      *
      * @return the accessible help text for this {@code Node}.
      * @defaultValue null
+     *
      * @since JavaFX 8u40
      */
     public final ObjectProperty<String> accessibleHelpProperty() {
@@ -9301,17 +10021,21 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This method is called by the assistive technology to request the value for an attribute.
+     * This method is called by the assistive technology to request
+     * the value for an attribute.
      * <p>
-     * This method is commonly overridden by subclasses to implement attributes that are required
-     * for a specific role.<br>
-     * If a particular attribute is not handled, the superclass implementation must be called.
+     * This method is commonly overridden by subclasses to implement
+     * attributes that are required for a specific role.<br>
+     * If a particular attribute is not handled, the superclass implementation
+     * must be called.
      * </p>
      *
      * @param attribute the requested attribute
      * @param parameters optional list of parameters
      * @return the value for the requested attribute
+     *
      * @see AccessibleAttribute
+     *
      * @since JavaFX 8u40
      */
     public Object queryAccessibleAttribute(AccessibleAttribute attribute, Object... parameters) {
@@ -9344,17 +10068,20 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This method is called by the assistive technology to request the action indicated by the
-     * argument should be executed.
+     * This method is called by the assistive technology to request the action
+     * indicated by the argument should be executed.
      * <p>
-     * This method is commonly overridden by subclasses to implement action that are required for a
-     * specific role.<br>
-     * If a particular action is not handled, the superclass implementation must be called.
+     * This method is commonly overridden by subclasses to implement
+     * action that are required for a specific role.<br>
+     * If a particular action is not handled, the superclass implementation
+     * must be called.
      * </p>
      *
      * @param action the action to execute
      * @param parameters optional list of parameters
+     *
      * @see AccessibleAction
+     *
      * @since JavaFX 8u40
      */
     public void executeAccessibleAction(AccessibleAction action, Object... parameters) {
@@ -9377,11 +10104,13 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * This method is called by the application to notify the assistive technology that the value
-     * for an attribute has changed.
+     * This method is called by the application to notify the assistive
+     * technology that the value for an attribute has changed.
      *
      * @param attributes the attribute whose value has changed
+     *
      * @see AccessibleAttribute
+     *
      * @since JavaFX 8u40
      */
     public final void notifyAccessibleAttributeChanged(AccessibleAttribute attributes) {
@@ -9402,11 +10131,13 @@ public abstract class Node implements EventTarget, Styleable {
         if (accessible == null) {
             Scene scene = getScene();
             /*
-             * It is possible the node was reparented and getAccessible() is called before the
-             * pulse. Try to recycle the accessible before creating a new one. Note: this code
-             * relies that an accessible can never be on more than one Scene#accMap. Thus, the only
-             * way scene#removeAccessible() returns non-null is if the node old scene and new scene
-             * are the same object.
+             * It is possible the node was reparented and getAccessible()
+             * is called before the pulse. Try to recycle the accessible
+             * before creating a new one.
+             * Note: this code relies that an accessible can never be on
+             * more than one Scene#accMap. Thus, the only way
+             * scene#removeAccessible() returns non-null is if the node
+             * old scene and new scene are the same object.
              */
             if (scene != null) {
                 accessible = scene.removeAccessible(this);
@@ -9427,11 +10158,12 @@ public abstract class Node implements EventTarget, Styleable {
                         return scene.getPeer().getAccessControlContext();
                     } else {
                         /*
-                         * In some rare cases the accessible for a Node is needed before its scene
-                         * is made visible. For example, the screen reader might ask a Menu for its
-                         * ContextMenu before the ContextMenu is made visible. That is a problem
-                         * because the Window for the ContextMenu is only created immediately before
-                         * the first time it is shown.
+                         * In some rare cases the accessible for a Node is needed
+                         * before its scene is made visible. For example, the screen reader
+                         * might ask a Menu for its ContextMenu before the ContextMenu
+                         * is made visible. That is a problem because the Window for the
+                         * ContextMenu is only created immediately before the first time
+                         * it is shown.
                          */
                         return scene.acc;
                     }
