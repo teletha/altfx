@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/teletha/altfx/compare/v1.4.0...v1.4.1) (2024-07-17)
+
+
+### Bug Fixes
+
+* update javafx ([9a71dce](https://github.com/teletha/altfx/commit/9a71dce4811d5c733bfeff2b78a48cb1df155678))
+
 ## [1.4.0](https://github.com/teletha/altfx/compare/v1.3.0...v1.4.0) (2024-02-15)
 
 
