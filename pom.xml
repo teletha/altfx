@@ -10,35 +10,35 @@
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-base</artifactId>
-			<version>23-ea+22</version>
+			<version>24-ea+5</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-controls</artifactId>
-			<version>23-ea+22</version>
+			<version>24-ea+5</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-graphics</artifactId>
-			<version>23-ea+22</version>
+			<version>24-ea+5</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-media</artifactId>
-			<version>23-ea+22</version>
+			<version>24-ea+5</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-web</artifactId>
-			<version>23-ea+22</version>
+			<version>24-ea+5</version>
 			<scope>compile</scope>
 			<exclusions/>
 		</dependency>
@@ -68,31 +68,32 @@
 			<url>https://jitpack.io/</url>
 		</repository>
 	</repositories>
-	<url>https://github.com/teletha/viewtify-cutomfx</url>
+	<url>https://github.com/teletha/altfx</url>
 	<scm>
-		<url>https://github.com/teletha/viewtify-cutomfx</url>
-		<connection>scm:git:https://github.com/teletha/viewtify-cutomfx.git</connection>
-		<developerConnection>scm:git:https://github.com/teletha/viewtify-cutomfx.git</developerConnection>
+		<url>https://github.com/teletha/altfx</url>
+		<connection>scm:git:https://github.com/teletha/altfx.git</connection>
+		<developerConnection>scm:git:https://github.com/teletha/altfx.git</developerConnection>
 	</scm>
 	<issueManagement>
 		<system>github</system>
-		<url>https://github.com/teletha/viewtify-cutomfx/issues</url>
+		<url>https://github.com/teletha/altfx/issues</url>
 	</issueManagement>
-	<developers/>
+	<developers>
+		<developer>
+			<name>teletha</name>
+			<email/>
+			<url>https://github.com/teletha</url>
+		</developer>
+	</developers>
 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
 				<configuration>
 					<encoding>UTF-8</encoding>
-					<release>21</release>
+					<release>23</release>
 					<compilerArgs/>
 				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M5</version>
 			</plugin>
 		</plugins>
 	</build>
