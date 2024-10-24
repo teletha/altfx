@@ -1,9 +1,9 @@
 <p align="center">
     <a href="https://docs.oracle.com/en/java/javase/23/"><img src="https://img.shields.io/badge/Java-Release%2023-green"/></a>
     <span>&nbsp;</span>
-    <a href="https://jitpack.io/#teletha/viewtify-cutomfx"><img src="https://img.shields.io/jitpack/v/github/teletha/viewtify-cutomfx?label=Repository&color=green"></a>
+    <a href="https://jitpack.io/#teletha/altfx"><img src="https://img.shields.io/jitpack/v/github/teletha/altfx?label=Repository&color=green"></a>
     <span>&nbsp;</span>
-    <a href="https://teletha.github.io/viewtify-cutomfx"><img src="https://img.shields.io/website.svg?down_color=red&down_message=CLOSE&label=Official%20Site&up_color=green&up_message=OPEN&url=https%3A%2F%2Fteletha.github.io%2Fviewtify-cutomfx"></a>
+    <a href="https://teletha.github.io/altfx"><img src="https://img.shields.io/website.svg?down_color=red&down_message=CLOSE&label=Official%20Site&up_color=green&up_message=OPEN&url=https%3A%2F%2Fteletha.github.io%2Faltfx"></a>
 </p>
 
 
@@ -90,8 +90,8 @@ Contributing improvements in these areas is much easier, and much less of a hass
 
 ### Bug Reports
 If you come across a bug, please file a bug report. Warning us of a bug is possibly the most valuable contribution you can make to Altfx.
-If you encounter a bug that hasn't already been filed, [please file a report](https://github.com/teletha/viewtify-cutomfx/issues/new) with an [SSCCE](http://sscce.org/) demonstrating the bug.
-If you think something might be a bug, but you're not sure, ask on StackOverflow or on [altfx-discuss](https://github.com/teletha/viewtify-cutomfx/discussions).
+If you encounter a bug that hasn't already been filed, [please file a report](https://github.com/teletha/altfx/issues/new) with an [SSCCE](http://sscce.org/) demonstrating the bug.
+If you think something might be a bug, but you're not sure, ask on StackOverflow or on [altfx-discuss](https://github.com/teletha/altfx/discussions).
 <p align="right"><a href="#top">back to top</a></p>
 
 
