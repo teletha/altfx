@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/teletha/altfx/compare/v1.4.0...v1.5.0) (2024-11-11)
+
+
+### Features
+
+* update javafx ([2bfe4be](https://github.com/teletha/altfx/commit/2bfe4be6d9912ab7d7f8e85bd051d915c73ebd14))
+
+
+### Bug Fixes
+
+* require Java 21 ([c44e58c](https://github.com/teletha/altfx/commit/c44e58c1b382e2920dc39e38f7244ec78e0f62e3))
+* update javafx ([9a71dce](https://github.com/teletha/altfx/commit/9a71dce4811d5c733bfeff2b78a48cb1df155678))
+
 ## [1.4.0](https://github.com/teletha/altfx/compare/v1.3.0...v1.4.0) (2024-02-15)
 
 
