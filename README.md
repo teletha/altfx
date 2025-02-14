@@ -97,22 +97,22 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 
 ## Dependency
 Altfx depends on the following products on runtime.
-* [javafx-base-24-ea+15](https://mvnrepository.com/artifact/org.openjfx/javafx-base/24-ea+15)
-* [javafx-base-24-ea+15-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-base/24-ea+15)
-* [javafx-controls-24-ea+15](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/24-ea+15)
-* [javafx-controls-24-ea+15-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/24-ea+15)
-* [javafx-graphics-24-ea+15](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/24-ea+15)
-* [javafx-graphics-24-ea+15-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/24-ea+15)
-* [javafx-media-24-ea+15](https://mvnrepository.com/artifact/org.openjfx/javafx-media/24-ea+15)
-* [javafx-media-24-ea+15-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-media/24-ea+15)
-* [javafx-web-24-ea+15](https://mvnrepository.com/artifact/org.openjfx/javafx-web/24-ea+15)
-* [javafx-web-24-ea+15-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-web/24-ea+15)
+* [javafx-base-25-ea+2](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+2)
+* [javafx-base-25-ea+2-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+2)
+* [javafx-controls-25-ea+2](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+2)
+* [javafx-controls-25-ea+2-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+2)
+* [javafx-graphics-25-ea+2](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+2)
+* [javafx-graphics-25-ea+2-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+2)
+* [javafx-media-25-ea+2](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+2)
+* [javafx-media-25-ea+2-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+2)
+* [javafx-web-25-ea+2](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+2)
+* [javafx-web-25-ea+2-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+2)
 * [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
 
 ## License
-Copyright (C) 2024 The ALTFX Development Team
+Copyright (C) 2025 The ALTFX Development Team
 
 MIT License
 
