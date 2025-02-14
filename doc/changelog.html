@@ -4,370 +4,276 @@
 		<meta charset="UTF-8"/>
 		<meta content="width=device-width, initial-scale=1" name="viewport"/>
 		<meta content="Explains how to use Altfx and its API. " name="description"/>
-		<link href="https://fonts.googleapis.com" rel="preconnect"/>
 		<link href="https://cdn.jsdelivr.net" rel="preconnect"/>
+		<link href="https://fonts.googleapis.com" rel="preconnect"/>
+		<link crossorigin="null" href="https://fonts.gstatic.com" rel="preconnect"/>
+		<link as="style" fetchpriority="high" href="https://fonts.googleapis.com/css2?display=swap&#38;family=Inter" rel="preload"/>
+		<link href="https://fonts.googleapis.com/css2?display=swap&#38;family=Inter" media="print" onload="this.media=&#39;all&#39;" rel="stylesheet"/>
+		<link as="style" fetchpriority="high" href="https://fonts.googleapis.com/css2?display=swap&#38;family=Material+Icons" rel="preload"/>
+		<link href="https://fonts.googleapis.com/css2?display=swap&#38;family=Material+Icons" media="print" onload="this.media=&#39;all&#39;" rel="stylesheet"/>
+		<link as="style" fetchpriority="high" href="https://fonts.googleapis.com/css2?display=swap&#38;family=Vollkorn" rel="preload"/>
+		<link href="https://fonts.googleapis.com/css2?display=swap&#38;family=Vollkorn" media="print" onload="this.media=&#39;all&#39;" rel="stylesheet"/>
 		<title>Altfx API</title>
 		<base href="../"/>
 		<script src="mimic.js" type="module"></script>
+		<link href="https://cdn.jsdelivr.net/npm/ress@4.0.0/dist/ress.min.css" rel="stylesheet"/>
 		<link href="main.css" rel="stylesheet"/>
 	</head>
-	<body class="X">
-		<header class="S">
-			<h1 class="m" date="2024-11-11" ver="1.5.0"><code>Altfx</code></h1>
-			<nav class="L"><a href="api/"><svg class="A svg" viewBox="0 0 24 24">
+	<body class="W">
+		<header class="X" date="2024-11-11" ver="1.5.0">
+			<h1 class="b"><code>Altfx</code></h1>
+			<nav class="K"><a href="api/" id="API"><svg class="package A svg" viewBox="0 0 24 24">
 						<use href="main.svg#package"/>
-					</svg><code>API</code></a><a href="https://github.com/teletha/altfx/discussions" target="_blank"><svg class="A svg" viewBox="0 0 24 24">
-						<use href="main.svg#user"/>
-					</svg>Community</a><a href="doc/changelog.html"><svg class="A svg" viewBox="0 0 24 24">
-						<use href="main.svg#activity"/>
-					</svg>Activity</a><a href="https://github.com/teletha/altfx" target="_blank"><svg class="A svg" viewBox="0 0 24 24">
-						<use href="main.svg#github"/>
-					</svg>Repository</a></nav>
-			<div class="W" id="ViewMode"><a id="light" title="Change to a brighter color scheme"><svg class="A svg" viewBox="0 0 24 24">
-						<use href="main.svg#sun"/>
 					</svg>
-				</a><a id="dark" title="Change to a darker color scheme"><svg class="A svg" viewBox="0 0 24 24">
+				</a><a href="https://github.com/teletha/altfx/discussions" id="Community" target="_blank"><svg class="user A svg" viewBox="0 0 24 24">
+						<use href="main.svg#user"/>
+					</svg>
+				</a><a href="doc/changelog.html" id="Activity"><svg class="activity A svg" viewBox="0 0 24 24">
+						<use href="main.svg#activity"/>
+					</svg>
+				</a><a href="https://github.com/teletha/altfx" id="Repository" target="_blank"><svg class="github A svg" viewBox="0 0 24 24">
+						<use href="main.svg#github"/>
+					</svg>
+				</a></nav>
+			<div class="c"><a aria-label="Change color scheme" id="theme"><svg class="sun A svg" viewBox="0 0 24 24">
+						<use href="main.svg#sun"/>
+					</svg><svg class="moon A svg" viewBox="0 0 24 24">
 						<use href="main.svg#moon"/>
 					</svg>
 				</a></div>
 		</header>
-		<main class="g">
-			<nav class="h">
-				<div></div>
-			</nav>
-			<article class="K" id="Article">
-				<section class="T B" id="1.5.0(2024-11-11)">
-					<header class="B I">
+		<nav class="S"></nav>
+		<article class="Y" id="Article">
+			<div class="Q">
+				<section class="B" id="1.5.0(2024-11-11)">
+					<header class="B M">
 						<h2>1.5.0 (2024-11-11)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
 									<use href="main.svg#copy"/>
 								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
 									<use href="main.svg#twitter"/>
 								</svg>
 							</a></div>
 					</header>
-					<section class="B H" id="Features">
-						<header class="B Q">
-							<h3>Features</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update javafx (<a href="https://github.com/teletha/altfx/commit/2bfe4be6d9912ab7d7f8e85bd051d915c73ebd14">2bfe4be</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="BugFixes">
-						<header class="B Q">
-							<h3>Bug Fixes</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>require Java 21 (<a href="https://github.com/teletha/altfx/commit/c44e58c1b382e2920dc39e38f7244ec78e0f62e3">c44e58c</a>)</li>
-							<li>update javafx (<a href="https://github.com/teletha/altfx/commit/9a71dce4811d5c733bfeff2b78a48cb1df155678">9a71dce</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.5.0.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
 				</section>
-				<section class="T B" id="1.4.0(2024-02-15)">
-					<header class="B I">
-						<h2>1.4.0 (2024-02-15)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#copy"/>
-								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#twitter"/>
-								</svg>
-							</a></div>
+				<section class="B L" id="Features">
+					<header class="B i">
+						<h3>Features</h3>
 					</header>
-					<section class="B H" id="Features">
-						<header class="B Q">
-							<h3>Features</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update javafx to 23-ea+3 (<a href="https://github.com/teletha/altfx/commit/90d979f0f791bd2f9a3af014ec6604bd49c1efd3">90d979f</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="BugFixes">
-						<header class="B Q">
-							<h3>Bug Fixes</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update ci process (<a href="https://github.com/teletha/altfx/commit/7978b58e299267ebedf0f579c64d1923af88e3b5">7978b58</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.4.0.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
-				</section>
-				<section class="T B" id="1.3.0(2024-01-04)">
-					<header class="B I">
-						<h2>1.3.0 (2024-01-04)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#copy"/>
-								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#twitter"/>
-								</svg>
-							</a></div>
-					</header>
-					<section class="B H" id="Features">
-						<header class="B Q">
-							<h3>Features</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update javafx (<a href="https://github.com/teletha/altfx/commit/85d2af133b3dced19ca7503bbc48abaa1b3b8d82">85d2af1</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="BugFixes">
-						<header class="B Q">
-							<h3>Bug Fixes</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update license (<a href="https://github.com/teletha/altfx/commit/e352c282b22e8beb899bbd74741ad2940fd974f4">e352c28</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.3.0.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
-				</section>
-				<section class="T B" id="1.2.0(2023-06-08)">
-					<header class="B I">
-						<h2>1.2.0 (2023-06-08)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#copy"/>
-								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#twitter"/>
-								</svg>
-							</a></div>
-					</header>
-					<section class="B H" id="Features">
-						<header class="B Q">
-							<h3>Features</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>Enabled Monocle to compile with the latest version of Javafx. (<a href="https://github.com/teletha/altfx/commit/be15d6f2cd7fe20b2aa647825bd35db7cfc980bd">be15d6f</a>)</li>
-							<li>update javafx (<a href="https://github.com/teletha/altfx/commit/dd83e3ddbd9fad7f9aff71663514d38cfb9e6559">dd83e3d</a>)</li>
-							<li>update javafx to 20-ea+11 (<a href="https://github.com/teletha/altfx/commit/9f05eec12abed8a3758d0ddfc6765bb40a559c4f">9f05eec</a>)</li>
-							<li>update javafx. (<a href="https://github.com/teletha/altfx/commit/ab828e3d440b2b27ce6da9166ca9e901e3a913d0">ab828e3</a>)</li>
-							<li>Update javafx. (<a href="https://github.com/teletha/altfx/commit/5d8bcd4a34ea64906fbb88cbaf52a82bb715871c">5d8bcd4</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="BugFixes">
-						<header class="B Q">
-							<h3>Bug Fixes</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>update javafx (<a href="https://github.com/teletha/altfx/commit/ac1f7e7946d2f288ffdf2aa45e708b38fbc2841a">ac1f7e7</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.2.0.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
-				</section>
-				<section class="T B" id="1.1.1(2021-03-29)">
-					<header class="B I">
-						<h2>1.1.1 (2021-03-29)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#copy"/>
-								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#twitter"/>
-								</svg>
-							</a></div>
-					</header>
-					<section class="B H" id="BugFixes">
-						<header class="B Q">
-							<h3>Bug Fixes</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>Remove unused class. (<a href="https://www.github.com/Teletha/altfx/commit/9572b9f6f25fbce6b96f70cb87f339c152bde917">9572b9f</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.1.1.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
-				</section>
-				<section class="T B" id="1.1.0(2021-03-29)">
-					<header class="B I">
-						<h2>1.1.0 (2021-03-29)</h2>
-						<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#copy"/>
-								</svg>
-							</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-									<use href="main.svg#twitter"/>
-								</svg>
-							</a></div>
-					</header>
-					<section class="B H" id="Features">
-						<header class="B Q">
-							<h3>Features</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li>Enable CI. (<a href="https://www.github.com/Teletha/altfx/commit/6fe1a5463d46fa9f3e0e2e9b7606b7c5b56d4d3a">6fe1a54</a>)</li>
-						</ul>
-					</section>
-					<section class="B H" id="Asserts">
-						<header class="B Q">
-							<h3>Assets</h3>
-							<div class="d"><span class="perp e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#copy"/>
-									</svg>
-								</span><a class="tweet e"><svg class="A svg" viewBox="0 0 24 24">
-										<use href="main.svg#twitter"/>
-									</svg>
-								</a></div>
-						</header>
-						<ul>
-							<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.1.0.zip">Source code</a> (zip)</li>
-						</ul>
-					</section>
-				</section>
-			</article>
-			<aside class="f" id="SubNavi">
-				<div class="Y">
 					<ul>
-						<li><a href="doc/changelog.html#1.5.0(2024-11-11)">1.5.0 (2024-11-11)</a></li>
-						<li><a href="doc/changelog.html#1.4.0(2024-02-15)">1.4.0 (2024-02-15)</a></li>
-						<li><a href="doc/changelog.html#1.3.0(2024-01-04)">1.3.0 (2024-01-04)</a></li>
-						<li><a href="doc/changelog.html#1.2.0(2023-06-08)">1.2.0 (2023-06-08)</a></li>
-						<li><a href="doc/changelog.html#1.1.1(2021-03-29)">1.1.1 (2021-03-29)</a></li>
-						<li><a href="doc/changelog.html#1.1.0(2021-03-29)">1.1.0 (2021-03-29)</a></li>
+						<li>update javafx (<a href="https://github.com/teletha/altfx/commit/2bfe4be6d9912ab7d7f8e85bd051d915c73ebd14">2bfe4be</a>)</li>
 					</ul>
-				</div>
-			</aside>
-		</main>
-		<script src="root.js"></script>
-		<script src="main.js" type="module"></script>
+				</section>
+				<section class="B L" id="BugFixes">
+					<header class="B i">
+						<h3>Bug Fixes</h3>
+					</header>
+					<ul>
+						<li>require Java 21 (<a href="https://github.com/teletha/altfx/commit/c44e58c1b382e2920dc39e38f7244ec78e0f62e3">c44e58c</a>)</li>
+						<li>update javafx (<a href="https://github.com/teletha/altfx/commit/9a71dce4811d5c733bfeff2b78a48cb1df155678">9a71dce</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.5.0.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+			<div class="Q">
+				<section class="B" id="1.4.0(2024-02-15)">
+					<header class="B M">
+						<h2>1.4.0 (2024-02-15)</h2>
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
+									<use href="main.svg#copy"/>
+								</svg>
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
+									<use href="main.svg#twitter"/>
+								</svg>
+							</a></div>
+					</header>
+				</section>
+				<section class="B L" id="Features">
+					<header class="B i">
+						<h3>Features</h3>
+					</header>
+					<ul>
+						<li>update javafx to 23-ea+3 (<a href="https://github.com/teletha/altfx/commit/90d979f0f791bd2f9a3af014ec6604bd49c1efd3">90d979f</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="BugFixes">
+					<header class="B i">
+						<h3>Bug Fixes</h3>
+					</header>
+					<ul>
+						<li>update ci process (<a href="https://github.com/teletha/altfx/commit/7978b58e299267ebedf0f579c64d1923af88e3b5">7978b58</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.4.0.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+			<div class="Q">
+				<section class="B" id="1.3.0(2024-01-04)">
+					<header class="B M">
+						<h2>1.3.0 (2024-01-04)</h2>
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
+									<use href="main.svg#copy"/>
+								</svg>
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
+									<use href="main.svg#twitter"/>
+								</svg>
+							</a></div>
+					</header>
+				</section>
+				<section class="B L" id="Features">
+					<header class="B i">
+						<h3>Features</h3>
+					</header>
+					<ul>
+						<li>update javafx (<a href="https://github.com/teletha/altfx/commit/85d2af133b3dced19ca7503bbc48abaa1b3b8d82">85d2af1</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="BugFixes">
+					<header class="B i">
+						<h3>Bug Fixes</h3>
+					</header>
+					<ul>
+						<li>update license (<a href="https://github.com/teletha/altfx/commit/e352c282b22e8beb899bbd74741ad2940fd974f4">e352c28</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.3.0.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+			<div class="Q">
+				<section class="B" id="1.2.0(2023-06-08)">
+					<header class="B M">
+						<h2>1.2.0 (2023-06-08)</h2>
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
+									<use href="main.svg#copy"/>
+								</svg>
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
+									<use href="main.svg#twitter"/>
+								</svg>
+							</a></div>
+					</header>
+				</section>
+				<section class="B L" id="Features">
+					<header class="B i">
+						<h3>Features</h3>
+					</header>
+					<ul>
+						<li>Enabled Monocle to compile with the latest version of Javafx. (<a href="https://github.com/teletha/altfx/commit/be15d6f2cd7fe20b2aa647825bd35db7cfc980bd">be15d6f</a>)</li>
+						<li>update javafx (<a href="https://github.com/teletha/altfx/commit/dd83e3ddbd9fad7f9aff71663514d38cfb9e6559">dd83e3d</a>)</li>
+						<li>update javafx to 20-ea+11 (<a href="https://github.com/teletha/altfx/commit/9f05eec12abed8a3758d0ddfc6765bb40a559c4f">9f05eec</a>)</li>
+						<li>update javafx. (<a href="https://github.com/teletha/altfx/commit/ab828e3d440b2b27ce6da9166ca9e901e3a913d0">ab828e3</a>)</li>
+						<li>Update javafx. (<a href="https://github.com/teletha/altfx/commit/5d8bcd4a34ea64906fbb88cbaf52a82bb715871c">5d8bcd4</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="BugFixes">
+					<header class="B i">
+						<h3>Bug Fixes</h3>
+					</header>
+					<ul>
+						<li>update javafx (<a href="https://github.com/teletha/altfx/commit/ac1f7e7946d2f288ffdf2aa45e708b38fbc2841a">ac1f7e7</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.2.0.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+			<div class="Q">
+				<section class="B" id="1.1.1(2021-03-29)">
+					<header class="B M">
+						<h2>1.1.1 (2021-03-29)</h2>
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
+									<use href="main.svg#copy"/>
+								</svg>
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
+									<use href="main.svg#twitter"/>
+								</svg>
+							</a></div>
+					</header>
+				</section>
+				<section class="B L" id="BugFixes">
+					<header class="B i">
+						<h3>Bug Fixes</h3>
+					</header>
+					<ul>
+						<li>Remove unused class. (<a href="https://www.github.com/Teletha/altfx/commit/9572b9f6f25fbce6b96f70cb87f339c152bde917">9572b9f</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.1.1.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+			<div class="Q">
+				<section class="B" id="1.1.0(2021-03-29)">
+					<header class="B M">
+						<h2>1.1.0 (2021-03-29)</h2>
+						<div class="r"><span class="perp p"><svg class="copy A svg" viewBox="0 0 24 24">
+									<use href="main.svg#copy"/>
+								</svg>
+							</span><a class="tweet p"><svg class="twitter A svg" viewBox="0 0 24 24">
+									<use href="main.svg#twitter"/>
+								</svg>
+							</a></div>
+					</header>
+				</section>
+				<section class="B L" id="Features">
+					<header class="B i">
+						<h3>Features</h3>
+					</header>
+					<ul>
+						<li>Enable CI. (<a href="https://www.github.com/Teletha/altfx/commit/6fe1a5463d46fa9f3e0e2e9b7606b7c5b56d4d3a">6fe1a54</a>)</li>
+					</ul>
+				</section>
+				<section class="B L" id="Asserts">
+					<header class="B i">
+						<h3>Assets</h3>
+					</header>
+					<ul>
+						<li><a href="https://github.com/teletha/altfx/archive/refs/tags/v1.1.0.zip">Source code</a> (zip)</li>
+					</ul>
+				</section>
+			</div>
+		</article>
+		<aside class="Z">
+			<ul>
+				<li><a href="doc/changelog.html#1.5.0(2024-11-11)">1.5.0 (2024-11-11)</a></li>
+				<li><a href="doc/changelog.html#1.4.0(2024-02-15)">1.4.0 (2024-02-15)</a></li>
+				<li><a href="doc/changelog.html#1.3.0(2024-01-04)">1.3.0 (2024-01-04)</a></li>
+				<li><a href="doc/changelog.html#1.2.0(2023-06-08)">1.2.0 (2023-06-08)</a></li>
+				<li><a href="doc/changelog.html#1.1.1(2021-03-29)">1.1.1 (2021-03-29)</a></li>
+				<li><a href="doc/changelog.html#1.1.0(2021-03-29)">1.1.0 (2021-03-29)</a></li>
+			</ul>
+		</aside>
+		<footer class="m"/>
 	</body>
+	<script src="root.js"></script>
+	<script src="main.js" type="module"></script>
 </html>
