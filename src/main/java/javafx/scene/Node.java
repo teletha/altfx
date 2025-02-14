@@ -25,7 +25,6 @@
 
 package javafx.scene;
 
-import java.security.AccessControlContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -223,11 +222,6 @@ import javafx.util.Callback;
  * The JavaFX Application Thread is created as part of the startup process for
  * the JavaFX runtime. See the {@link javafx.application.Application} class and
  * the {@link Platform#startup(Runnable)} method for more information.
- * </p>
- *
- * <p>
- * An application should not extend the Node class directly. Doing so may lead to
- * an UnsupportedOperationException being thrown.
  * </p>
  *
  * <h2><a id="StringID">String ID</a></h2>
@@ -604,6 +598,11 @@ public abstract class Node implements EventTarget, Styleable {
             @Override
             public void reapplyCSS(Node node) {
                 node.reapplyCSS();
+            }
+
+            @Override
+            public boolean isInitialCssState(Node node) {
+                return node.initialCssState;
             }
 
             @Override
@@ -1021,6 +1020,8 @@ public abstract class Node implements EventTarget, Styleable {
                     }
                     updateDisabled();
                     computeDerivedDepthTest();
+                    resetInitialCssStateFlag();
+
                     final Parent newParent = get();
 
                     // Update the focus bits before calling reapplyCss(), as the focus bits can
@@ -1039,8 +1040,8 @@ public abstract class Node implements EventTarget, Styleable {
                         //
                         reapplyCSS();
                     } else {
-                        // RT-31168: reset CssFlag to clean so css will be reapplied if the node is
-                        // added back later.
+                        // JDK-8123224: reset CssFlag to clean so css will be reapplied if the node
+                        // is added back later.
                         // If flag is REAPPLY, then reapplyCSS() will just return and the call to
                         // notifyParentsOfInvalidatedCSS() will be skipped thus leaving the node
                         // un-styled.
@@ -1117,8 +1118,14 @@ public abstract class Node implements EventTarget, Styleable {
             getClip().setScenes(newScene, newSubScene);
         }
         if (sceneChanged) {
+            if (oldScene != null) {
+                oldScene.unregisterClearInitialCssStageFlag(this);
+            }
+
             if (newScene == null) {
                 completeTransitionTimers();
+            } else {
+                resetInitialCssStateFlag();
             }
             updateCanReceiveFocus();
             if (isFocusTraversable()) {
@@ -3896,7 +3903,7 @@ public abstract class Node implements EventTarget, Styleable {
         // actually be TEMP_BOUNDS, so we save off state
         if (getClip() != null
                 // FIXME: All 3D picking is currently ignored by rendering.
-                // Until this is fixed or defined differently (RT-28510),
+                // Until this is fixed or defined differently (JDK-8090485),
                 // we follow this behavior.
                 && !(this instanceof Shape3D) && !(getClip() instanceof Shape3D)) {
             double x1 = bounds.getMinX();
@@ -5411,7 +5418,7 @@ public abstract class Node implements EventTarget, Styleable {
         Node clip = getClip();
         if (clip != null
                 // FIXME: All 3D picking is currently ignored by rendering.
-                // Until this is fixed or defined differently (RT-28510),
+                // Until this is fixed or defined differently (JDK-8090485),
                 // we follow this behavior.
                 && !(this instanceof Shape3D) && !(clip instanceof Shape3D)) {
             final double dirX = dir.x;
@@ -8072,11 +8079,15 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
+    /**
+     */
     final void setFocusQuietly(boolean focused, boolean focusVisible) {
         this.focused.set(focused);
         this.focusVisible.set(focused && focusVisible);
     }
 
+    /**
+     */
     final void notifyFocusListeners() {
         focused.notifyListeners();
         focusVisible.notifyListeners();
@@ -8368,6 +8379,24 @@ public abstract class Node implements EventTarget, Styleable {
             return false;
         }
         return getScene().traverse(this, dir, method);
+    }
+
+    /**
+     * Requests to move the focus from this {@code Node} in the specified direction.
+     * The {@code Node} serves as a reference point and does not have to be focused or focusable.
+     * A successful traversal results in a new {@code Node} being focused.
+     * <p>
+     * This method is expected to be called in response to a {@code KeyEvent}; therefore the
+     * {@code Node}
+     * receiving focus will have the {@link #focusVisibleProperty() focusVisible} property set.
+     *
+     * @param direction the direction of focus traversal, non-null
+     * @return {@code true} if traversal was successful
+     * @since 24
+     */
+    public final boolean requestFocusTraversal(TraversalDirection direction) {
+        Direction d = Direction.of(direction);
+        return traverse(d, TraversalMethod.KEY);
     }
 
     // --------------------------
@@ -9390,7 +9419,6 @@ public abstract class Node implements EventTarget, Styleable {
         public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
-
             final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>();
             styleables.add(CURSOR);
             styleables.add(EFFECT);
@@ -9448,7 +9476,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @return The Styles that match this CSS property for the given Node. The
      * list is sorted by descending specificity.
      */
-    // SB-dependency: RT-21096 has been filed to track this
+    // SB-dependency: JDK-8092096 has been filed to track this
     static List<Style> getMatchingStyles(CssMetaData cssMetaData, Styleable styleable) {
         return CssStyleHelper.getMatchingStyles(styleable, cssMetaData);
     }
@@ -9465,9 +9493,9 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /*
-     * RT-17293
+     * JDK-8091202
      */
-    // SB-dependency: RT-21096 has been filed to track this
+    // SB-dependency: JDK-8092096 has been filed to track this
     final void setStyleMap(ObservableMap<StyleableProperty<?>, List<Style>> styleMap) {
         if (styleMap != null)
             getProperties().put("STYLEMAP", styleMap);
@@ -9486,7 +9514,7 @@ public abstract class Node implements EventTarget, Styleable {
      * @param styleMap A Map to be populated with the styles. If null, a new Map will be allocated.
      * @return The Map populated with matching styles.
      */
-    // SB-dependency: RT-21096 has been filed to track this
+    // SB-dependency: JDK-8092096 has been filed to track this
     Map<StyleableProperty<?>, List<Style>> findStyles(Map<StyleableProperty<?>, List<Style>> styleMap) {
 
         Map<StyleableProperty<?>, List<Style>> ret = CssStyleHelper.getMatchingStyles(styleMap, this);
@@ -9628,7 +9656,7 @@ public abstract class Node implements EventTarget, Styleable {
             return;
         }
 
-        // RT-36838 - don't reapply CSS in the middle of an update
+        // JDK-8095580 - don't reapply CSS in the middle of an update
         if (cssFlag == CssFlags.UPDATE) {
             cssFlag = CssFlags.REAPPLY;
             notifyParentsOfInvalidatedCSS();
@@ -9824,7 +9852,7 @@ public abstract class Node implements EventTarget, Styleable {
         if (cssFlag != CssFlags.REAPPLY) cssFlag = CssFlags.UPDATE;
 
         //
-        // RT-28394 - need to see if any ancestor has a flag UPDATE
+        // JDK-8115093 - need to see if any ancestor has a flag UPDATE
         // If so, process css from the top-most CssFlags.UPDATE node
         // since my ancestor's styles may affect mine.
         //
@@ -9889,6 +9917,29 @@ public abstract class Node implements EventTarget, Styleable {
         if (styleHelper != null && getScene() != null) {
             styleHelper.transitionToState(this);
         }
+    }
+
+    /**
+     * A node is considered to be in its initial CSS state if it wasn't shown in a scene graph
+     * before.
+     * This flag is cleared after CSS processing was completed in a Scene pulse event. Note that
+     * manual
+     * calls to {@link #applyCss()} or similar methods will not clear this flag, since we consider
+     * all
+     * CSS processing before the Scene pulse to be part of the node's initial state.
+     */
+    private boolean initialCssState = true;
+
+    private void resetInitialCssStateFlag() {
+        initialCssState = true;
+        Scene scene = getScene();
+        if (scene != null) {
+            scene.registerClearInitialCssStateFlag(this);
+        }
+    }
+
+    void clearInitialCssStateFlag() {
+        initialCssState = false;
     }
 
     /**
@@ -10267,29 +10318,6 @@ public abstract class Node implements EventTarget, Styleable {
         if (accessible == null) {
             accessible = Application.GetApplication().createAccessible();
             accessible.setEventHandler(new Accessible.EventHandler() {
-                @SuppressWarnings("removal")
-                @Override
-                public AccessControlContext getAccessControlContext() {
-                    Scene scene = getScene();
-                    if (scene == null) {
-                        /* This can happen during the release process of an accessible object. */
-                        throw new RuntimeException("Accessbility requested for node not on a scene");
-                    }
-                    if (scene.getPeer() != null) {
-                        return scene.getPeer().getAccessControlContext();
-                    } else {
-                        /*
-                         * In some rare cases the accessible for a Node is needed
-                         * before its scene is made visible. For example, the screen reader
-                         * might ask a Menu for its ContextMenu before the ContextMenu
-                         * is made visible. That is a problem because the Window for the
-                         * ContextMenu is only created immediately before the first time
-                         * it is shown.
-                         */
-                        return scene.acc;
-                    }
-                }
-
                 @Override
                 public Object getAttribute(AccessibleAttribute attribute, Object... parameters) {
                     return queryAccessibleAttribute(attribute, parameters);
