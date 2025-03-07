@@ -48,7 +48,7 @@ jobs:
       with:
         release-type: simple
         package-name: altfx
-        include-v-in-tags: false
+        include-v-in-tag: false
 
     - name: Auto commit
       uses: stefanzweifel/git-auto-commit-action@v5
