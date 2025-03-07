@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/teletha/altfx/compare/v1.5.0...v1.5.1) (2025-02-14)
+
+
+### Bug Fixes
+
+* update javafx ([558f655](https://github.com/teletha/altfx/commit/558f6556aff238902736b77e1fa0efedb286e7a8))
+
 ## [1.5.0](https://github.com/teletha/altfx/compare/v1.4.0...v1.5.0) (2024-11-11)
 
 
