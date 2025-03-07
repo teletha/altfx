@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/teletha/altfx/compare/v1.5.2...v1.5.3) (2025-03-07)
+
+
+### Bug Fixes
+
+* update ci ([af47aa8](https://github.com/teletha/altfx/commit/af47aa803c254a09865b5724daef53710c505714))
+
 ## [1.5.2](https://github.com/teletha/altfx/compare/v1.5.1...v1.5.2) (2025-03-07)
 
 
