@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.9](https://github.com/teletha/altfx/compare/1.5.8...1.5.9) (2025-03-08)
+
+
+### Bug Fixes
+
+* Update jitpack.yml ([d9fff31](https://github.com/teletha/altfx/commit/d9fff31837b83dfe6e673d864cb3ce1b1cd35e58))
+
 ## [1.5.8](https://github.com/teletha/altfx/compare/1.5.7...1.5.8) (2025-03-08)
 
 
