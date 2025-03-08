@@ -32,7 +32,7 @@ Add it into in the dependencies element like so:
 <dependency>
     <groupId>com.github.teletha</groupId>
     <artifactId>altfx</artifactId>
-    <version>1.5.5</version>
+    <version>1.5.6</version>
 </dependency>
 ```
 #### [Gradle](https://gradle.org/)
@@ -45,7 +45,7 @@ repositories {
 Add it into the dependencies section like so:
 ```gradle
 dependencies {
-    implementation 'com.github.teletha:altfx:1.5.5'
+    implementation 'com.github.teletha:altfx:1.5.6'
 }
 ```
 #### [SBT](https://www.scala-sbt.org/)
@@ -55,7 +55,7 @@ resolvers += "jitpack" at "https://jitpack.io"
 ```
 Add it into the libraryDependencies section like so:
 ```scala
-libraryDependencies += "com.github.teletha" % "altfx" % "1.5.5"
+libraryDependencies += "com.github.teletha" % "altfx" % "1.5.6"
 ```
 #### [Leiningen](https://leiningen.org/)
 Add JitPack repository at the end of repositories in your project.clj:
@@ -64,12 +64,12 @@ Add JitPack repository at the end of repositories in your project.clj:
 ```
 Add it into the dependencies section like so:
 ```clj
-:dependencies [[com.github.teletha/altfx "1.5.5"]]
+:dependencies [[com.github.teletha/altfx "1.5.6"]]
 ```
 #### [Bee](https://teletha.github.io/bee)
 Add it into your project definition class like so:
 ```java
-require("com.github.teletha", "altfx", "1.5.5");
+require("com.github.teletha", "altfx", "1.5.6");
 ```
 <p align="right"><a href="#top">back to top</a></p>
 
