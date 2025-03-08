@@ -14,8 +14,6 @@ public class Project extends bee.api.Project {
     {
         product("com.github.teletha", "altfx", ref("version.txt"));
 
-        require(SourceVersion.latest(), SourceVersion.RELEASE_21);
-
         require("org.openjfx", "javafx-base");
         require("org.openjfx", "javafx-graphics");
         require("org.openjfx", "javafx-controls");
