@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.10](https://github.com/teletha/altfx/compare/1.5.9...1.5.10) (2025-03-08)
+
+
+### Bug Fixes
+
+* Update build.yml ([75dfbec](https://github.com/teletha/altfx/commit/75dfbec8828b13ca423c6f9a87a5e397fb8a0a8c))
+* Update pom.xml ([f235513](https://github.com/teletha/altfx/commit/f23551386c605f72c7d67bf58d3be1df80e5f5b3))
+* Update pom.xml ([bb44293](https://github.com/teletha/altfx/commit/bb4429306aa1016a6110b17d97830362a5ce50a2))
+
 ## [1.5.9](https://github.com/teletha/altfx/compare/1.5.8...1.5.9) (2025-03-08)
 
 
