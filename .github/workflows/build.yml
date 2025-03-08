@@ -44,12 +44,11 @@ jobs:
         publish_dir: target/site
 
     - name: Request Releasing
-      uses: googleapis/release-please-action@v4.2.0
+      uses: googleapis/release-please-action@v3.7.13
       with:
         release-type: simple
         package-name: altfx
         include-v-in-tag: false
-        tag-separator: ""
 
     - name: Auto commit
       uses: stefanzweifel/git-auto-commit-action@v5
