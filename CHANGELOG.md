@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.11](https://github.com/teletha/altfx/compare/1.5.10...1.5.11) (2025-03-08)
+
+
+### Bug Fixes
+
+* Update pom.xml ([883f9e7](https://github.com/teletha/altfx/commit/883f9e7a8738d730b02aaf55c6d284a1d988276e))
+
 ## [1.5.10](https://github.com/teletha/altfx/compare/1.5.9...1.5.10) (2025-03-08)
 
 
