@@ -14,3 +14,4 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee maven install
   fi
+  cp /home/jitpack/build/pom.xml /home/jitpack/build/target
