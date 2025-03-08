@@ -14,4 +14,6 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee maven install
   fi
-  cp /home/jitpack/build/pom.xml /home/jitpack/build/target
+  cp /home/jitpack/build/pom.xml /home/jitpack/build/target/
+  touch /home/jitpack/.m2/repository/com/github/teletha/altfx/1.5.14/altfx-1.5.14.pom.sha1
+  touch /home/jitpack/.m2/repository/com/github/teletha/altfx/1.5.14/altfx-1.5.14.pom.md5
