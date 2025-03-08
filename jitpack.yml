@@ -1,11 +1,6 @@
 jdk:
   - openjdk23
 
-before_install: |
-  source ~/.sdkman/bin/sdkman-init.sh
-  sdk install java 23-open
-  source ~/.sdkman/bin/sdkman-init.sh
-
 install: |
   if [ -e "bee" ]; then
     source bee install maven
