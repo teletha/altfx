@@ -1,13 +1,5 @@
 jdk:
   - openjdk23
-  
-artifacts:
-  paths:
-    - /home/jitpack/.m2/repository/**
-    - /home/jitpack/build/target/**
-    - /home/jitpack/build/target/*.jar
-    - target/*.jar
-    - build/target/*.jar
 
 before_install: |
   source ~/.sdkman/bin/sdkman-init.sh
@@ -22,4 +14,4 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee install maven
   fi
-  
+  mvn install:install-file -Dfile=target/${ARTIFACT}-${VERSION}.jar -DgroupId=${GROUP} -DartifactId=${ARTIFACT} -Dversion=${VERSION} -Dpackaging=jar -DgeneratePom=false
