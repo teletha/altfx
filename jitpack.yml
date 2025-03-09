@@ -6,7 +6,7 @@ build:
     # Point JitPack to the build/libs directory for artifacts
     artifacts:
       paths:
-        - build/target/*.jar
+        - /home/jitpack/build/target/*.jar
 
 before_install: |
   source ~/.sdkman/bin/sdkman-init.sh
