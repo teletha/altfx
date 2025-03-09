@@ -15,10 +15,12 @@ install: |
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee install
   fi
 
+  mkdir -p target/maven-archiver
+  echo -e "artifactId=${ARTIFACT}\ngroupId=${GROUP}\nversion=${VERSION}" > target/maven-archiver/pom.properties
 
-  echo "CURRENT DIRECTORY"
-  find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
+  #echo "CURRENT DIRECTORY"
+  #find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
 
-  echo "Local Mave Repository"
-  find /home/jitpack/.m2 | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
+  #echo "Local Mave Repository"
+  #find /home/jitpack/.m2 | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
   
