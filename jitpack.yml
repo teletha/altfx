@@ -2,7 +2,7 @@ jdk:
   - openjdk23
   
 artifacts:
-  -path: build/target/*.jar
+  - path: build/target/*.jar
 
 before_install: |
   source ~/.sdkman/bin/sdkman-init.sh
