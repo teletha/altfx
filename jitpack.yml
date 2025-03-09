@@ -1,5 +1,8 @@
 jdk:
   - openjdk23
+  
+artifacts:
+  -path: build/target/*.jar
 
 before_install: |
   source ~/.sdkman/bin/sdkman-init.sh
@@ -14,7 +17,4 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee install maven
   fi
-  echo "1bc15181b0c9343145d7c2205bf338b4" > /home/jitpack/.m2/repository/com/github/teletha/altfx/1.5.18/altfx-1.5.18.pom.md5
-  echo "f8cff5bd2754eed1cf40ccb78dc4856643cc979f" > /home/jitpack/.m2/repository/com/github/teletha/altfx/1.5.18/altfx-1.5.18.pom.sha1
-  echo "Build hash file"
   
