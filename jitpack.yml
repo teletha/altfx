@@ -1,8 +1,12 @@
 jdk:
   - openjdk23
   
-artifacts:
-  - path: build/target/*.jar
+build:
+  publish:
+    # Point JitPack to the build/libs directory for artifacts
+    artifacts:
+      paths:
+        - build/target/*.jar
 
 before_install: |
   source ~/.sdkman/bin/sdkman-init.sh
