@@ -14,3 +14,11 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee install maven
   fi
+  mvn install
+
+  echo "CURRENT DIRECTORY"
+  find . | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
+
+  echo "Local Mave Repository"
+  find /home/jitpack/.m2 | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
+  
