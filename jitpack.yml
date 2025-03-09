@@ -14,6 +14,4 @@ install: |
     curl -SsL -o bee-${version}.jar https://jitpack.io/com/github/teletha/bee/${version}/bee-${version}.jar
     java -javaagent:bee-${version}.jar -cp bee-${version}.jar bee.Bee install
   fi
-  cp local.xml /home/jitpack/.m2/repository/com/github/teletha/altfx/maven-metadata-local.xml
-  cat local.xml
-  cat /home/jitpack/.m2/repository/com/github/teletha/altfx/maven-metadata-local.xml
+  find /home/repository | sort | sed '1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'
