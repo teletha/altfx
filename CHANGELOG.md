@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.27](https://github.com/teletha/altfx/compare/1.5.26...1.5.27) (2025-03-09)
+
+
+### Bug Fixes
+
+* Update jitpack.yml ([93e326b](https://github.com/teletha/altfx/commit/93e326b93c475012650dfa683d60296922a2439b))
+* Update jitpack.yml ([80a3b4b](https://github.com/teletha/altfx/commit/80a3b4b725ef950a4b231d9b5d34806f6065d9e0))
+
 ## [1.5.26](https://github.com/teletha/altfx/compare/1.5.25...1.5.26) (2025-03-09)
 
 
