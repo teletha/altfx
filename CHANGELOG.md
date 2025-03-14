@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/teletha/altfx/compare/1.5.34...1.6.0) (2025-03-14)
+
+
+### Features
+
+* update ci process ([ced75f4](https://github.com/teletha/altfx/commit/ced75f4fc9f7ebf9b7305a6eadee982965ed6438))
+
 ## [1.5.34](https://github.com/teletha/altfx/compare/1.5.33...1.5.34) (2025-03-09)
 
 
