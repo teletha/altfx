@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://docs.oracle.com/en/java/javase/23/"><img src="https://img.shields.io/badge/Java-Release%2023-green"/></a>
+    <a href="https://docs.oracle.com/en/java/javase/24/"><img src="https://img.shields.io/badge/Java-Release%2024-green"/></a>
     <span>&nbsp;</span>
     <a href="https://jitpack.io/#teletha/altfx"><img src="https://img.shields.io/jitpack/v/github/teletha/altfx?label=Repository&color=green"></a>
     <span>&nbsp;</span>
@@ -13,7 +13,7 @@
 
 
 ## Prerequisites
-Altfx runs on all major operating systems and requires only [Java version 23](https://docs.oracle.com/en/java/javase/23/) or later to run.
+Altfx runs on all major operating systems and requires only [Java version 24](https://docs.oracle.com/en/java/javase/24/) or later to run.
 To check, please run `java -version` on your terminal.
 <p align="right"><a href="#top">back to top</a></p>
 
@@ -97,16 +97,16 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 
 ## Dependency
 Altfx depends on the following products on runtime.
-* [javafx-base-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+6)
-* [javafx-base-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+6)
-* [javafx-controls-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+6)
-* [javafx-controls-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+6)
-* [javafx-graphics-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+6)
-* [javafx-graphics-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+6)
-* [javafx-media-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+6)
-* [javafx-media-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+6)
-* [javafx-web-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+6)
-* [javafx-web-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+6)
+* [javafx-base-25-ea+8](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+8)
+* [javafx-base-25-ea+8-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+8)
+* [javafx-controls-25-ea+8](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+8)
+* [javafx-controls-25-ea+8-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+8)
+* [javafx-graphics-25-ea+8](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+8)
+* [javafx-graphics-25-ea+8-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+8)
+* [javafx-media-25-ea+8](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+8)
+* [javafx-media-25-ea+8-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+8)
+* [javafx-web-25-ea+8](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+8)
+* [javafx-web-25-ea+8-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+8)
 * [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
