@@ -98,15 +98,15 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 ## Dependency
 Altfx depends on the following products on runtime.
 * [javafx-base-25-ea+10](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+10)
-* [javafx-base-25-ea+10-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+10)
+* [javafx-base-25-ea+10-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+10)
 * [javafx-controls-25-ea+10](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+10)
-* [javafx-controls-25-ea+10-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+10)
+* [javafx-controls-25-ea+10-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+10)
 * [javafx-graphics-25-ea+10](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+10)
-* [javafx-graphics-25-ea+10-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+10)
+* [javafx-graphics-25-ea+10-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+10)
 * [javafx-media-25-ea+10](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+10)
-* [javafx-media-25-ea+10-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+10)
+* [javafx-media-25-ea+10-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+10)
 * [javafx-web-25-ea+10](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+10)
-* [javafx-web-25-ea+10-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+10)
+* [javafx-web-25-ea+10-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+10)
 * [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
