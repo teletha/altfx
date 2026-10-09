@@ -10,7 +10,7 @@
 
 public class Project extends bee.api.Project {
     {
-        product("com.github.teletha", "altfx", ref("version.txt"));
+        product("io.github.teletha", "altfx", ref("version.txt"));
 
         String version = "25-ea+6";
         require("org.openjfx", "javafx-base", version);

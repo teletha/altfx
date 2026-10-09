@@ -1,7 +1,7 @@
 <p align="center">
     <a href="https://docs.oracle.com/en/java/javase/25/"><img src="https://img.shields.io/badge/Java-Release%2025-green"/></a>
     <span>&nbsp;</span>
-    <a href="https://jitpack.io/#com.github.teletha/altfx"><img src="https://img.shields.io/jitpack/version/com.github.teletha/altfx?label=Repository&color=green"></a>
+    <a href="https://jitpack.io/#io.github.teletha/altfx"><img src="https://img.shields.io/jitpack/version/io.github.teletha/altfx?label=Repository&color=green"></a>
     <span>&nbsp;</span>
     <a href="https://teletha.github.io/altfx"><img src="https://img.shields.io/website.svg?down_color=red&down_message=CLOSE&label=Official%20Site&up_color=green&up_message=OPEN&url=https%3A%2F%2Fteletha.github.io%2Faltfx"></a>
 </p>
@@ -30,7 +30,7 @@ Add JitPack repository at the end of repositories element in your build.xml:
 Add it into in the dependencies element like so:
 ```xml
 <dependency>
-    <groupId>com.github.teletha</groupId>
+    <groupId>io.github.teletha</groupId>
     <artifactId>altfx</artifactId>
     <version>1.6.1</version>
 </dependency>
@@ -45,7 +45,7 @@ repositories {
 Add it into the dependencies section like so:
 ```gradle
 dependencies {
-    implementation 'com.github.teletha:altfx:1.6.1'
+    implementation 'io.github.teletha:altfx:1.6.1'
 }
 ```
 #### [SBT](https://www.scala-sbt.org/)
@@ -55,7 +55,7 @@ resolvers += "jitpack" at "https://jitpack.io"
 ```
 Add it into the libraryDependencies section like so:
 ```scala
-libraryDependencies += "com.github.teletha" % "altfx" % "1.6.1"
+libraryDependencies += "io.github.teletha" % "altfx" % "1.6.1"
 ```
 #### [Leiningen](https://leiningen.org/)
 Add JitPack repository at the end of repositories in your project().clj:
@@ -64,12 +64,12 @@ Add JitPack repository at the end of repositories in your project().clj:
 ```
 Add it into the dependencies section like so:
 ```clj
-:dependencies [[com.github.teletha/altfx "1.6.1"]]
+:dependencies [[io.github.teletha/altfx "1.6.1"]]
 ```
 #### [Bee](https://teletha.github.io/bee)
 Add it into your project definition class like so:
 ```java
-require("com.github.teletha", "altfx", "1.6.1");
+require("io.github.teletha", "altfx", "1.6.1");
 ```
 <p align="right"><a href="#top">back to top</a></p>
 
@@ -98,15 +98,15 @@ If you think something might be a bug, but you're not sure, ask on StackOverflow
 ## Dependency
 Altfx depends on the following products on runtime.
 * [javafx-base-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+6)
-* [javafx-base-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+6)
+* [javafx-base-25-ea+6-win](https://mvnrepository.com/artifact/org.openjfx/javafx-base/25-ea+6)
 * [javafx-controls-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+6)
-* [javafx-controls-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+6)
+* [javafx-controls-25-ea+6-win](https://mvnrepository.com/artifact/org.openjfx/javafx-controls/25-ea+6)
 * [javafx-graphics-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+6)
-* [javafx-graphics-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+6)
+* [javafx-graphics-25-ea+6-win](https://mvnrepository.com/artifact/org.openjfx/javafx-graphics/25-ea+6)
 * [javafx-media-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+6)
-* [javafx-media-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+6)
+* [javafx-media-25-ea+6-win](https://mvnrepository.com/artifact/org.openjfx/javafx-media/25-ea+6)
 * [javafx-web-25-ea+6](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+6)
-* [javafx-web-25-ea+6-linux](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+6)
+* [javafx-web-25-ea+6-win](https://mvnrepository.com/artifact/org.openjfx/javafx-web/25-ea+6)
 * [openjfx-monocle-jdk-12.0.1+2](https://mvnrepository.com/artifact/org.testfx/openjfx-monocle/jdk-12.0.1+2)
 <p align="right"><a href="#top">back to top</a></p>
 
