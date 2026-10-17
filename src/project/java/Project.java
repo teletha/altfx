@@ -12,12 +12,11 @@ public class Project extends bee.api.Project {
     {
         product("io.github.teletha", "altfx", ref("version.txt"));
 
-        String version = "25-ea+6";
-        require("org.openjfx", "javafx-base", version);
-        require("org.openjfx", "javafx-graphics", version);
-        require("org.openjfx", "javafx-controls", version);
-        require("org.openjfx", "javafx-media", version);
-        require("org.openjfx", "javafx-web", version);
+        require("org.openjfx", "javafx-base");
+        require("org.openjfx", "javafx-graphics");
+        require("org.openjfx", "javafx-controls");
+        require("org.openjfx", "javafx-media");
+        require("org.openjfx", "javafx-web");
         require("org.testfx", "openjfx-monocle", "jdk-12.0.1+2");
 
         versionControlSystem("https://github.com/teletha/altfx");

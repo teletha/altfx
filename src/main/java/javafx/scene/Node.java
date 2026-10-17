@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2024, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -46,6 +46,7 @@ import com.sun.javafx.css.TransitionDefinition;
 import com.sun.javafx.css.TransitionDefinitionConverter;
 import com.sun.javafx.css.TransitionDefinitionCssMetaData;
 import com.sun.javafx.css.TransitionTimer;
+import com.sun.javafx.css.media.MediaQueryContext;
 import com.sun.javafx.effect.EffectDirtyBits;
 import com.sun.javafx.geom.BaseBounds;
 import com.sun.javafx.geom.BoxBounds;
@@ -506,6 +507,21 @@ public abstract class Node implements EventTarget, Styleable {
             }
 
             @Override
+            public void setScenes(Node node, Scene newScene, SubScene newSubScene) {
+                node.setScenes(newScene, newSubScene);
+            }
+
+            @Override
+            public void setParent(Node node, Parent parent) {
+                node.setParent(parent);
+            }
+
+            @Override
+            public void updateBounds(Node node) {
+                node.updateBounds();
+            }
+
+            @Override
             public void syncPeer(Node node) {
                 node.syncPeer();
             }
@@ -513,6 +529,16 @@ public abstract class Node implements EventTarget, Styleable {
             @Override
             public void layoutBoundsChanged(Node node) {
                 node.layoutBoundsChanged();
+            }
+
+            @Override
+            public void nodeResolvedOrientationInvalidated(Node node) {
+                node.nodeResolvedOrientationInvalidated();
+            }
+
+            @Override
+            public void setInheritOrientationFromScene(Node node, boolean value) {
+                node.setInheritOrientationFromScene(value);
             }
 
             @Override
@@ -601,6 +627,12 @@ public abstract class Node implements EventTarget, Styleable {
             }
 
             @Override
+            public void scheduleReapplyCSS(Node node) {
+                node.cssFlag = CssFlags.REAPPLY;
+                Toolkit.getToolkit().requestNextPulse();
+            }
+
+            @Override
             public boolean isInitialCssState(Node node) {
                 return node.initialCssState;
             }
@@ -676,6 +708,16 @@ public abstract class Node implements EventTarget, Styleable {
             @Override
             public TransitionTimer findTransitionTimer(Node node, String propertyName) {
                 return node.findTransitionTimer(propertyName);
+            }
+
+            @Override
+            public MediaQueryContext getMediaQueryContext(Node node) {
+                return node.getMediaQueryContext();
+            }
+
+            @Override
+            public List<String> getStyleClassOrNull(Node node) {
+                return node.styleClass;
             }
         });
     }
@@ -1161,8 +1203,8 @@ public abstract class Node implements EventTarget, Styleable {
         if (oldScene != null) {
             oldScene.clearNodeMnemonics(this);
         }
-        if (getParent() == null) {
-            // if we are the root we need to handle scene change
+
+        if (getParent() == null || isInheritOrientationFromScene(resolvedNodeOrientation)) {
             parentResolvedOrientationInvalidated();
         }
 
@@ -1302,41 +1344,30 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     /**
-     * A list of String identifiers which can be used to logically group
+     * A list of String identifiers that can be used to logically group
      * Nodes, specifically for an external style engine. This variable is
      * analogous to the "class" attribute on an HTML element and, as such,
      * each element of the list is a style class to which this Node belongs.
+     * <p>
+     * Lazily initialized on the first access, so we usually call this method
+     * via {@link NodeHelper#getStyleClassOrNull(Node)} from CSS code to not initialize this when
+     * not needed.
      *
      * @see <a href="http://www.w3.org/TR/css3-selectors/#class-html">CSS3 class selectors</a>
      * @defaultValue null
      */
-    private ObservableList<String> styleClass = new TrackableObservableList<>() {
-        @Override
-        protected void onChanged(Change<String> c) {
-            reapplyCSS();
-        }
-
-        @Override
-        public String toString() {
-            if (size() == 0) {
-                return "";
-            } else if (size() == 1) {
-                return get(0);
-            } else {
-                StringBuilder buf = new StringBuilder();
-                for (int i = 0; i < size(); i++) {
-                    buf.append(get(i));
-                    if (i + 1 < size()) {
-                        buf.append(' ');
-                    }
-                }
-                return buf.toString();
-            }
-        }
-    };
+    private ObservableList<String> styleClass;
 
     @Override
     public final ObservableList<String> getStyleClass() {
+        if (styleClass == null) {
+            styleClass = new TrackableObservableList<>() {
+                @Override
+                protected void onChanged(Change<String> c) {
+                    reapplyCSS();
+                }
+            };
+        }
         return styleClass;
     }
 
@@ -2701,8 +2732,8 @@ public abstract class Node implements EventTarget, Styleable {
      * *
      **************************************************************************/
     /**
-     * Defines whether or not this node's layout will be managed by it's parent.
-     * If the node is managed, it's parent will factor the node's geometry
+     * Defines whether or not this node's layout will be managed by its parent.
+     * If the node is managed, its parent will factor the node's geometry
      * into its own preferred size and {@link #layoutBoundsProperty layoutBounds}
      * calculations and will lay it
      * out during the scene's layout pass. If a managed node's layoutBounds
@@ -6472,6 +6503,16 @@ public abstract class Node implements EventTarget, Styleable {
 
     private static final byte AUTOMATIC_ORIENTATION_MASK = 2;
 
+    /**
+     * Indicates that the effective node orientation only depends on the explicit value set on this
+     * node
+     * and on the scene (if the node orientation is inherited), but not on the parent. This flag
+     * must only
+     * be set with {@link NodeHelper#setInheritOrientationFromScene(Node, boolean)} for scene
+     * overlays.
+     */
+    private static final byte INHERIT_ORIENTATION_FROM_SCENE = 4;
+
     private byte resolvedNodeOrientation = EFFECTIVE_ORIENTATION_LTR | AUTOMATIC_ORIENTATION_LTR;
 
     public final void setNodeOrientation(NodeOrientation orientation) {
@@ -6564,6 +6605,10 @@ public abstract class Node implements EventTarget, Styleable {
 
         resolvedNodeOrientation = (byte) (calcEffectiveNodeOrientation() | calcAutomaticNodeOrientation());
 
+        if (isInheritOrientationFromScene(oldResolvedNodeOrientation)) {
+            resolvedNodeOrientation |= INHERIT_ORIENTATION_FROM_SCENE;
+        }
+
         if ((effectiveNodeOrientationProperty != null) && (getEffectiveOrientation(resolvedNodeOrientation) != getEffectiveOrientation(oldResolvedNodeOrientation))) {
             effectiveNodeOrientationProperty.invalidate();
         }
@@ -6581,6 +6626,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     private Node getMirroringOrientationParent() {
+        if (isInheritOrientationFromScene(resolvedNodeOrientation)) {
+            return null;
+        }
+
         Node parentValue = getParent();
         while (parentValue != null) {
             if (parentValue.usesMirroring()) {
@@ -6598,6 +6647,10 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     private Node getOrientationParent() {
+        if (isInheritOrientationFromScene(resolvedNodeOrientation)) {
+            return null;
+        }
+
         final Node parentValue = getParent();
         if (parentValue != null) {
             return parentValue;
@@ -6675,6 +6728,18 @@ public abstract class Node implements EventTarget, Styleable {
 
     private static byte getAutomaticOrientation(final byte resolvedNodeOrientation) {
         return (byte) (resolvedNodeOrientation & AUTOMATIC_ORIENTATION_MASK);
+    }
+
+    private static boolean isInheritOrientationFromScene(byte resolvedNodeOrientation) {
+        return (resolvedNodeOrientation & INHERIT_ORIENTATION_FROM_SCENE) != 0;
+    }
+
+    private void setInheritOrientationFromScene(boolean value) {
+        if (value) {
+            resolvedNodeOrientation |= INHERIT_ORIENTATION_FROM_SCENE;
+        } else {
+            resolvedNodeOrientation &= ~INHERIT_ORIENTATION_FROM_SCENE;
+        }
     }
 
     private final class EffectiveOrientationProperty extends ReadOnlyObjectPropertyBase<NodeOrientation> {
@@ -7566,6 +7631,26 @@ public abstract class Node implements EventTarget, Styleable {
         return getEventHandlerProperties().onMouseDragExitedProperty();
     }
 
+    public final void setOnMouseDragDone(EventHandler<? super MouseDragEvent> value) {
+        onMouseDragDoneProperty().set(value);
+    }
+
+    public final EventHandler<? super MouseDragEvent> getOnMouseDragDone() {
+        return (eventHandlerProperties == null) ? null : eventHandlerProperties.getOnMouseDragDone();
+    }
+
+    /**
+     * Defines a function to be called when a full press-drag-release gesture ends with this node as
+     * its source.
+     *
+     * @return the event handler that is called when a full press-drag-release finishes
+     * @see MouseDragEvent#MOUSE_DRAG_DONE
+     * @since 26
+     */
+    public final ObjectProperty<EventHandler<? super MouseDragEvent>> onMouseDragDoneProperty() {
+        return getEventHandlerProperties().onMouseDragDoneProperty();
+    }
+
     /*
      * *************************************************************************
      * *
@@ -8079,15 +8164,11 @@ public abstract class Node implements EventTarget, Styleable {
         }
     }
 
-    /**
-     */
     final void setFocusQuietly(boolean focused, boolean focusVisible) {
         this.focused.set(focused);
         this.focusVisible.set(focused && focusVisible);
     }
 
-    /**
-     */
     final void notifyFocusListeners() {
         focused.notifyListeners();
         focusVisible.notifyListeners();
@@ -8414,7 +8495,7 @@ public abstract class Node implements EventTarget, Styleable {
         String simpleName = klassName.substring(klassName.lastIndexOf('.') + 1);
         StringBuilder sbuf = new StringBuilder(simpleName);
         boolean hasId = id != null && !"".equals(getId());
-        boolean hasStyleClass = !getStyleClass().isEmpty();
+        boolean hasStyleClass = styleClass != null && !getStyleClass().isEmpty();
 
         if (!hasId) {
             sbuf.append('@');
@@ -8430,7 +8511,7 @@ public abstract class Node implements EventTarget, Styleable {
             else
                 sbuf.append(", ");
             sbuf.append("styleClass=");
-            sbuf.append(getStyleClass());
+            sbuf.append(String.join(" ", getStyleClass()));
             sbuf.append("]");
         }
         return sbuf.toString();
@@ -8894,6 +8975,7 @@ public abstract class Node implements EventTarget, Styleable {
      * a running {@link TransitionTimer} with this {@code Node}. This allows the node
      * to keep track of running timers that are targeting its properties.
      *
+     * @param propertyName the CSS name of the targeted property
      * @param timer the transition timer
      */
     private void addTransitionTimer(String propertyName, TransitionTimer timer) {
@@ -8911,7 +8993,7 @@ public abstract class Node implements EventTarget, Styleable {
      * This method is called by animatable {@link StyleableProperty} implementations
      * when their {@link TransitionTimer} has completed.
      *
-     * @param timer the transition timer
+     * @param propertyName the CSS name of the targeted property
      */
     private void removeTransitionTimer(String propertyName) {
         var transitionTimers = miscProperties != null ? miscProperties.transitionTimers : null;
@@ -9419,6 +9501,7 @@ public abstract class Node implements EventTarget, Styleable {
         public static List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
+
             final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>();
             styleables.add(CURSOR);
             styleables.add(EFFECT);
@@ -9584,11 +9667,8 @@ public abstract class Node implements EventTarget, Styleable {
 
         final boolean modified = active ? pseudoClassStates.add(pseudoClass) : pseudoClassStates.remove(pseudoClass);
 
-        if (modified && styleHelper != null) {
-            final boolean isTransition = styleHelper.pseudoClassStateChanged(pseudoClass);
-            if (isTransition) {
-                requestCssStateTransition();
-            }
+        if (modified && cssTriggerStates != null && cssTriggerStates.contains(pseudoClass)) {
+            requestCssStateTransition();
         }
     }
 
@@ -9644,8 +9724,8 @@ public abstract class Node implements EventTarget, Styleable {
     }
 
     final void reapplyCSS() {
-
-        if (getScene() == null) return;
+        var scene = getScene();
+        if (scene == null) return;
 
         if (cssFlag == CssFlags.REAPPLY) return;
 
@@ -9661,6 +9741,10 @@ public abstract class Node implements EventTarget, Styleable {
             cssFlag = CssFlags.REAPPLY;
             notifyParentsOfInvalidatedCSS();
             return;
+        }
+
+        if (scene.getRoot() == this) {
+            SceneHelper.getSceneContext(scene).notifyReapplyCSS();
         }
 
         reapplyCss();
@@ -9906,6 +9990,10 @@ public abstract class Node implements EventTarget, Styleable {
 
         // if REAPPLY was deferred, process it now...
         if (cssFlag == CssFlags.REAPPLY) {
+            if (getScene() instanceof Scene scene && scene.getRoot() == this) {
+                SceneHelper.getSceneContext(scene).notifyReapplyCSS();
+            }
+
             reapplyCss();
         }
 
@@ -9942,12 +10030,25 @@ public abstract class Node implements EventTarget, Styleable {
         initialCssState = false;
     }
 
+    private MediaQueryContext getMediaQueryContext() {
+        Scene scene = getScene();
+        return scene != null ? SceneHelper.getSceneContext(scene) : null;
+    }
+
     /**
      * A StyleHelper for this node.
      * A StyleHelper contains all the css styles for this node
      * and knows how to apply them when our state changes.
      */
     CssStyleHelper styleHelper;
+
+    /**
+     * The pseudo-classes of this node that a selector matching this node or one of its descendants
+     * depends on.
+     * Only a change of one of these pseudo-classes triggers a CSS update of this node and its
+     * descendants.
+     */
+    PseudoClassState cssTriggerStates;
 
     private static final PseudoClass HOVER_PSEUDOCLASS_STATE = PseudoClass.getPseudoClass("hover");
 
